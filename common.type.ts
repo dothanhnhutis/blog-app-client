@@ -72,17 +72,17 @@ export type OTPSearch = {
   createdAt: string;
 };
 
-// export interface SessionInterface extends Session {
-//   user: User & {
-//     id: string;
-//     email: string;
-//     role: string;
-//     name: string;
-//     image: string;
-//     status: string;
-//     token: string;
-//   };
-// }
+export interface SessionInterface extends Session {
+  user: User & {
+    id: string;
+    email: string;
+    role: "ADMIN" | "POSTER" | "SUBSCRIBER";
+    name: string;
+    avatarUrl: string;
+    token: string;
+    expires: string;
+  };
+}
 
 type AsyncReturnType<T extends (...args: any) => Promise<any>> = T extends (
   ...args: any

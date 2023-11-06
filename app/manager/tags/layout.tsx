@@ -4,10 +4,17 @@ import MediaChatImage from "@/images/mediachat.png";
 import TagList from "@/components/TagList";
 import TagHeader from "@/components/TagHeader";
 import { getServerAuthSession } from "@/lib/auth";
+import { http } from "@/lib/http";
 
 const TagsLayout = async ({ children }: { children: React.ReactNode }) => {
-  const session = await getServerAuthSession();
-  console.log(session);
+  const { data } = await http.get<{
+    tags: {
+      id: string;
+      name: string;
+      slug: string;
+      _count: { post: number };
+    }[];
+  }>("/tags");
   return (
     <div className="xl:max-w-7xl xl:mx-auto px-6 pb-4 pt-3 h-full">
       <div className="flex flex-col flex-grow h-full">
@@ -20,15 +27,14 @@ const TagsLayout = async ({ children }: { children: React.ReactNode }) => {
         </div>
         <div className="flex border rounded-md h-full overflow-hidden">
           <TagList
-            tags={[]}
-            // tags={ tags.map((t) => {
-            //   return {
-            //     id: t.id,
-            //     name: t.name,
-            //     slug: t.slug,
-            //     post: t._count.post,
-            //   };
-            // })}
+            tags={data.tags.map((t) => {
+              return {
+                id: t.id,
+                name: t.name,
+                slug: t.slug,
+                post: t._count.post,
+              };
+            })}
           />
           <div className="flex flex-col flex-grow">
             <TagHeader />

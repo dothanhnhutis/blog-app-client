@@ -26,8 +26,12 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { CreateTagInputType } from "@/constants/schema";
+import { useSession } from "next-auth/react";
+import { http } from "@/lib/http";
 
 const TagHeader = () => {
+  const { data: session, status } = useSession();
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState<boolean>(false);
@@ -118,10 +122,16 @@ const TagAddBtn = () => {
 
   const tagCreateMutation = useMutation({
     mutationFn: async () => {
-      return {};
+      const { data } = await http.post<{
+        id: string;
+        name: string;
+        slug: string;
+      }>("/tags", {
+        form,
+      });
+      return data;
     },
     onError(error) {
-      console.log(error);
       setErrorSlug(true);
       toast({
         description: "😟 Slug has been used",
@@ -146,7 +156,7 @@ const TagAddBtn = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // tagCreateMutation.mutate(form);
+    tagCreateMutation.mutate();
   };
   return (
     <AlertDialog open={open}>
@@ -158,7 +168,7 @@ const TagAddBtn = () => {
         <PlusIcon className="w-4 h-4" />
       </Button>
       <AlertDialogContent>
-        <form>
+        <form onSubmit={handleSubmit}>
           <AlertDialogHeader>
             <AlertDialogTitle>Create new tag</AlertDialogTitle>
           </AlertDialogHeader>

@@ -38,7 +38,7 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
           </Avatar>
           <div className="w-full overflow-hidden">
             <p className="font-medium text-lg">
-              {session?.user?.name ?? "error"}
+              {session?.user?.username ?? "error"}
             </p>
             <p className="font-light text-sm text-gray-500">
               {`${session?.user?.role ?? "error"}`}

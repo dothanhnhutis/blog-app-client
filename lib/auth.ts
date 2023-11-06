@@ -4,7 +4,7 @@ import { JWT } from "next-auth/jwt";
 import { NextAuthOptions, getServerSession } from "next-auth";
 import GithubProvider, { GithubProfile } from "next-auth/providers/github";
 import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
-import {} from "@/common.type";
+import { SessionInterface } from "@/common.type";
 import { SigninFormType } from "@/constants/schema";
 import { http } from "./http";
 import { signJWT } from "./jwt";
@@ -23,6 +23,7 @@ export const authOptions: NextAuthOptions = {
             avatarUrl: profile.avatar_url,
           };
           const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
+
           const { data } = await http.post<{
             id: string;
             email: string;
@@ -30,8 +31,8 @@ export const authOptions: NextAuthOptions = {
             avatarUrl?: string | null;
             role: "ADMIN" | "POSTER" | "SUBSCRIBER";
             status: "ACTIVE" | "BLOCK";
+            token: string;
           }>("/auth/signin/provider", { token });
-
           return {
             ...profile,
             email: data.email,
@@ -40,6 +41,7 @@ export const authOptions: NextAuthOptions = {
             id: data.id,
             username: data.username,
             avatarUrl: data.avatarUrl,
+            token: data.token,
           };
         } catch (error) {
           return {
@@ -50,6 +52,7 @@ export const authOptions: NextAuthOptions = {
             id: profile.id.toString(),
             username: profile.name ?? "",
             avatarUrl: profile.avatar_url,
+            token: "",
           };
         }
       },
@@ -61,27 +64,28 @@ export const authOptions: NextAuthOptions = {
         try {
           const payload = {
             email: profile.email,
-            name: profile.name,
+            username: profile.name,
             avatarUrl: profile.picture,
           };
           const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
           const { data } = await http.post<{
             id: string;
             email: string;
-            name: string;
+            username: string;
             avatarUrl?: string | null;
             role: "ADMIN" | "POSTER" | "SUBSCRIBER";
             status: "ACTIVE" | "BLOCK";
+            token: string;
           }>("/auth/signin/provider", { token });
-
           return {
             ...profile,
             email: data.email,
             role: data.role,
             status: data.status,
             id: data.id,
-            name: data.name,
+            username: data.username,
             avatarUrl: data.avatarUrl,
+            token: data.token,
           };
         } catch (error) {
           return {
@@ -90,8 +94,9 @@ export const authOptions: NextAuthOptions = {
             role: "SUBSCRIBER",
             status: "BLOCK",
             id: profile.sub,
-            name: profile.name,
+            username: profile.name,
             avatarUrl: profile.picture,
+            token: "",
           };
         }
       },
@@ -105,17 +110,18 @@ export const authOptions: NextAuthOptions = {
           const { data } = await http.post<{
             id: string;
             email: string;
-            name: string;
+            username: string;
             avatarUrl?: string | null;
             role: "ADMIN" | "POSTER" | "SUBSCRIBER";
             status: "ACTIVE" | "BLOCK";
+            token: string;
           }>("/auth/signin", { email, password });
-          console.log(data);
           return {
+            email: data.email,
             role: data.role,
             status: data.status,
             id: data.id,
-            username: data.name,
+            username: data.username,
             avatarUrl: data.avatarUrl,
             token: data.token,
           };
@@ -146,22 +152,20 @@ export const authOptions: NextAuthOptions = {
       return user.status === "ACTIVE";
     },
     async jwt({ token, user }) {
-      console.log(token);
-      console.log(user);
       if (user) {
-        token.name = user.name;
+        token.username = user.username;
         token.role = user.role;
         token.avatarUrl = user.avatarUrl;
+        token.token = user.token;
       }
       return token;
     },
     async session({ session, token }) {
-      console.log(session);
-      console.log(token);
       if (session.user) {
-        session.user.name = token.name;
+        session.user.username = token.username;
         session.user.role = token.role;
         session.user.avatarUrl = token.avatarUrl;
+        session.user.token = token.token;
       }
       return session;
     },
@@ -173,6 +177,6 @@ export const authOptions: NextAuthOptions = {
 };
 
 export async function getServerAuthSession() {
-  const session = await getServerSession(authOptions);
+  const session = (await getServerSession(authOptions)) as SessionInterface;
   return session;
 }

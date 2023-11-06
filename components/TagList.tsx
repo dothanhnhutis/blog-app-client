@@ -14,6 +14,7 @@ import {
 } from "./ui/command";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
+import { http } from "@/lib/http";
 
 const TagList = ({
   tags,
@@ -24,14 +25,23 @@ const TagList = ({
     initialData: tags,
     queryKey: ["tags"],
     queryFn: async () => {
-      return [];
-      // const tags = await getTagList();
-      // return tags.map((tag) => ({
-      //   id: tag.id,
-      //   name: tag.name,
-      //   slug: tag.slug,
-      //   post: tag._count.post,
-      // }));
+      const { data } = await http.get<{
+        tags: {
+          id: string;
+          name: string;
+          slug: string;
+          _count: { post: number };
+        }[];
+      }>("/tags");
+
+      return data.tags.map((t) => {
+        return {
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          post: t._count.post,
+        };
+      });
     },
   });
   const pathName = usePathname();

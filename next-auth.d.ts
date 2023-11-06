@@ -9,6 +9,7 @@ declare module "next-auth" {
       status: "ACTIVE" | "BLOCK";
       role: "ADMIN" | "POSTER" | "SUBSCRIBER";
       avatarUrl: string | null | undefined;
+      token: string;
     } & DefaultSession;
   }
   interface User extends DefaultUser {
@@ -16,6 +17,7 @@ declare module "next-auth" {
     username: string;
     status: "ACTIVE" | "BLOCK";
     role: "ADMIN" | "POSTER" | "SUBSCRIBER";
+    token: string;
   }
 }
 
@@ -25,5 +27,6 @@ declare module "next-auth/jwt" {
     role: "ADMIN" | "POSTER" | "SUBSCRIBER";
     avatarUrl: string | null | undefined;
     username: string;
+    token: string;
   }
 }
