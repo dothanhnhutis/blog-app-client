@@ -3,18 +3,17 @@ import Image from "next/image";
 import MediaChatImage from "@/images/mediachat.png";
 import TagList from "@/components/TagList";
 import TagHeader from "@/components/TagHeader";
-import { getServerAuthSession } from "@/lib/auth";
 import { http } from "@/lib/http";
 
 const TagsLayout = async ({ children }: { children: React.ReactNode }) => {
-  const { data } = await http.get<{
-    tags: {
+  const { data } = await http.get<
+    {
       id: string;
       name: string;
       slug: string;
       _count: { post: number };
-    }[];
-  }>("/tags");
+    }[]
+  >("/tags");
   return (
     <div className="xl:max-w-7xl xl:mx-auto px-6 pb-4 pt-3 h-full">
       <div className="flex flex-col flex-grow h-full">
@@ -27,7 +26,7 @@ const TagsLayout = async ({ children }: { children: React.ReactNode }) => {
         </div>
         <div className="flex border rounded-md h-full overflow-hidden">
           <TagList
-            tags={data.tags.map((t) => {
+            tags={data.map((t) => {
               return {
                 id: t.id,
                 name: t.name,

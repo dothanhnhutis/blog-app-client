@@ -26,12 +26,10 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { CreateTagInputType } from "@/constants/schema";
-import { useSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import { http } from "@/lib/http";
 
 const TagHeader = () => {
-  const { data: session, status } = useSession();
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = React.useState<boolean>(false);
@@ -126,9 +124,7 @@ const TagAddBtn = () => {
         id: string;
         name: string;
         slug: string;
-      }>("/tags", {
-        form,
-      });
+      }>("/tags", form);
       return data;
     },
     onError(error) {

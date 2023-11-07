@@ -79,7 +79,7 @@ const SignupPage = () => {
 
   const userMutation = useMutation({
     mutationFn: async () => {
-      await http.post("/auth/signup", form);
+      await http.post("/signup", form);
     },
     onSettled: () => {
       setForm({ email: "", password: "", code: "" });

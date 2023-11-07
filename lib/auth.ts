@@ -6,7 +6,7 @@ import GithubProvider, { GithubProfile } from "next-auth/providers/github";
 import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
 import { SessionInterface } from "@/common.type";
 import { SigninFormType } from "@/constants/schema";
-import { http } from "./http";
+import { http, httpExternal } from "./http";
 import { signJWT } from "./jwt";
 
 export const authOptions: NextAuthOptions = {
@@ -32,7 +32,8 @@ export const authOptions: NextAuthOptions = {
             role: "ADMIN" | "POSTER" | "SUBSCRIBER";
             status: "ACTIVE" | "BLOCK";
             token: string;
-          }>("/auth/signin/provider", { token });
+          }>("/signin/provider", { token });
+
           return {
             ...profile,
             email: data.email,
@@ -76,7 +77,7 @@ export const authOptions: NextAuthOptions = {
             role: "ADMIN" | "POSTER" | "SUBSCRIBER";
             status: "ACTIVE" | "BLOCK";
             token: string;
-          }>("/auth/signin/provider", { token });
+          }>("/signin/provider", { token });
           return {
             ...profile,
             email: data.email,
@@ -115,7 +116,7 @@ export const authOptions: NextAuthOptions = {
             role: "ADMIN" | "POSTER" | "SUBSCRIBER";
             status: "ACTIVE" | "BLOCK";
             token: string;
-          }>("/auth/signin", { email, password });
+          }>("/signin", { email, password });
           return {
             email: data.email,
             role: data.role,
@@ -148,7 +149,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       return user.status === "ACTIVE";
     },
     async jwt({ token, user }) {
@@ -166,6 +167,7 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
         session.user.avatarUrl = token.avatarUrl;
         session.user.token = token.token;
+        httpExternal.defaults.headers.common.Authorization = `Bearer ${token.token}`;
       }
       return session;
     },

@@ -17,7 +17,6 @@ import AvatarDefault from "@/images/user-1.jpg";
 import { SessionInterface } from "@/common.type";
 
 const UserMenu = ({ session }: { session: SessionInterface }) => {
-  console.log(session);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="outline-none">
