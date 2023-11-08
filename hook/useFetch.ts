@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import axios, { AxiosError } from "axios";
 import { http } from "@/lib/http";
@@ -19,6 +20,7 @@ export function useFetch(): UseFetchResponse {
       return data;
     } catch (error: any | AxiosError) {
       if (axios.isAxiosError(error)) {
+        console.log(error);
         if (error.response?.status === 401) {
           setError(error.response.data.message);
 

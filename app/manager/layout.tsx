@@ -3,7 +3,6 @@ import SideBar from "@/components/SideBar";
 import { SwitchMode } from "@/components/SwitchMode";
 import UserMenu from "@/components/UserMenu";
 import { getServerAuthSession } from "@/lib/auth";
-import { http } from "@/lib/http";
 import Link from "next/link";
 import React from "react";
 

@@ -13,7 +13,6 @@ import {
   CommandList,
 } from "./ui/command";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "./ui/skeleton";
 import { http } from "@/lib/http";
 
 const TagList = ({
