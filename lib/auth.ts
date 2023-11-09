@@ -23,7 +23,6 @@ export const authOptions: NextAuthOptions = {
             avatarUrl: profile.avatar_url,
           };
           const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
-
           const { data } = await http.post<{
             id: string;
             email: string;
@@ -33,7 +32,6 @@ export const authOptions: NextAuthOptions = {
             status: "ACTIVE" | "BLOCK";
             token: string;
           }>("/signin/provider", { token });
-
           return {
             ...profile,
             email: data.email,

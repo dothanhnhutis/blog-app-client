@@ -15,7 +15,8 @@ export const TankStackProvider = ({
   const [queryClient] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={queryClient}>
-      {children} <ReactQueryDevtools initialIsOpen={false} />
+      {children}
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 };

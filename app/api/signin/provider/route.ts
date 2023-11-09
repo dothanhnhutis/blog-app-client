@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       role: string;
       status: string;
       token: string;
-    }>("/auth/signup/provider", body);
+    }>("/auth/signin/provider", body);
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ ok: "something went wrong" }, { status: 500 });

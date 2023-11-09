@@ -1,3 +1,4 @@
+"use client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,78 +27,159 @@ import {
 } from "lucide-react";
 import React from "react";
 import AvatarDefault from "@/images/user-1.jpg";
+import { Textarea } from "@/components/ui/textarea";
+import { useQuery } from "@tanstack/react-query";
+import { http } from "@/lib/http";
+
+type UserType = {
+  id: string;
+  email: string;
+  status: "ACTIVE" | "BLOCK";
+  role: "ADMIN" | "POSTER" | "SUBSCRIBER";
+  userPreference: {
+    id: string;
+    username: string;
+    bio: string;
+    phone: string;
+    avatarUrl: string;
+    address: string;
+  };
+};
+
+type UserForm = Omit<UserType, "id" | "userPreference"> &
+  Omit<UserType["userPreference"], "id">;
 
 const UserPage = () => {
+  const [searchKey, setSearchKey] = React.useState<string>("");
+  const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
+  const [userSelected, setUserSelected] = React.useState<
+    UserType | undefined
+  >();
+
+  const { data: users } = useQuery({
+    queryKey: ["users"],
+    queryFn: async () => {
+      const { data } = await http.get<UserType[]>("/users");
+      return data;
+    },
+  });
+
+  const [form, setForm] = React.useState({
+    email: "",
+    status: "ACTIVE",
+    role: "POSTER",
+    userPreference: {
+      username: "",
+      bio: "",
+      phone: "",
+      avatarUrl: "",
+      address: "",
+    },
+  });
+
+  const handleToggleEditMode = () => {
+    if (!isEditMode) {
+      setIsEditMode(true);
+    } else {
+      // if (userSelected!.name === form.name && tagSelected?.slug === form.slug) {
+      //   setIsEditMode(false);
+      // } else {
+      //   tagUpdateMutation.mutate({ id: tagSelected!.id, data: form });
+      // }
+    }
+  };
+
   return (
     <div className="flex border rounded-md h-full overflow-hidden">
       <div className="border-r w-[220px]">
         <div className="flex items-center border-b p-2">
           <SearchIcon className="w-4 h-4 opacity-50" />
           <Input
+            value={searchKey}
+            onChange={(e) => setSearchKey(e.target.value)}
             placeholder="Search name..."
             type="text"
             className="border-none focus-visible:ring-transparent ring-inset"
           />
         </div>
-        <div className=" flex flex-col gap-1 p-1 h-full overflow-y-scroll">
-          <p className="w-full text-center text-sm p-2">No result found</p>
-          <div
-            className={cn(
-              "flex items-center gap-1 p-2 rounded-md",
-              true ? "bg-accent" : "hover:bg-accent"
-            )}
-          >
-            <CheckIcon
-              className={cn(
-                "h-4 w-4 flex flex-shrink-0",
-                true ? "opacity-100" : "opacity-0"
-              )}
-            />
-            <div className="overflow-hidden">
-              <p className="font-medium truncate">Thanh Nhut</p>
-              <p className="text-xs truncate">gaconght@gmail.com</p>
-            </div>
-          </div>
 
-          <div
-            className={cn(
-              "flex items-center gap-1 p-2 rounded-md",
-              false ? "bg-accent" : "hover:bg-accent"
-            )}
-          >
-            <CheckIcon
-              className={cn(
-                "h-4 w-4 flex flex-shrink-0",
-                false ? "opacity-100" : "opacity-0"
-              )}
-            />
-            <div className="overflow-hidden mr-auto">
-              <p className="font-medium truncate">Thanh Nhut</p>
-              <p className="text-xs truncate">gaconght@gmail.com</p>
-            </div>
-            <LockIcon
-              className={cn(
-                "h-4 w-4 flex flex-shrink-0",
-                true ? "opacity-100" : "opacity-0"
-              )}
-            />
-          </div>
+        <div className=" flex flex-col gap-1 p-1 h-full overflow-y-scroll">
+          {!users ||
+          users.length == 0 ||
+          users.filter((u) =>
+            searchKey.length === 0
+              ? true
+              : u.userPreference.username
+                  .toLowerCase()
+                  .includes(searchKey.toLowerCase())
+          ).length === 0 ? (
+            <p className="w-full text-center text-sm p-2">No result found</p>
+          ) : (
+            users
+              .filter((u) =>
+                searchKey.length === 0
+                  ? true
+                  : u.userPreference.username
+                      .toLowerCase()
+                      .includes(searchKey.toLowerCase())
+              )
+              .map((user) => (
+                <div
+                  onClick={() =>
+                    setUserSelected((prev) =>
+                      prev?.email === user.email ? undefined : user
+                    )
+                  }
+                  className={cn(
+                    "flex items-center gap-1 p-2 rounded-md cursor-pointer",
+                    userSelected?.email === user.email
+                      ? "bg-accent"
+                      : "hover:bg-accent"
+                  )}
+                >
+                  <CheckIcon
+                    className={cn(
+                      "h-4 w-4 flex flex-shrink-0",
+                      userSelected?.email === user.email
+                        ? "opacity-100"
+                        : "opacity-0"
+                    )}
+                  />
+                  <div className="overflow-hidden mr-auto">
+                    <p className="font-medium truncate">
+                      {user.userPreference.username}
+                    </p>
+                    <p className="text-xs truncate">{user.email}</p>
+                  </div>
+                  <LockIcon
+                    className={cn(
+                      "h-4 w-4 flex flex-shrink-0",
+                      user.status === "BLOCK" ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                </div>
+              ))
+          )}
         </div>
       </div>
       <div className="flex flex-col flex-grow">
         <div className="flex items-center p-2 border-b min-h-[57px]">
           <Button
             variant="ghost"
-            className={cn("h-8 w-8 p-0 mr-2", true ? "" : "hidden")}
+            className={cn("h-8 w-8 p-0 mr-2", false ? "" : "hidden")}
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </Button>
-          <h3 className="text-lg">User Detail</h3>
+          <h3 className="text-lg ">User Detail</h3>
           <div className="flex gap-1 ml-auto">
             <Button
+              onClick={handleToggleEditMode}
               disabled={false}
               variant="ghost"
-              className={cn("rounded-full w-10 h-10 p-2", true ? "" : "hidden")}
+              className={cn(
+                "rounded-full w-10 h-10 p-2",
+                userSelected ? "" : "hidden"
+              )}
             >
               {true ? (
                 <SaveIcon className="w-4 h-4" />
@@ -107,7 +189,10 @@ const UserPage = () => {
             </Button>
             <Button
               variant="ghost"
-              className={cn("rounded-full w-10 h-10 p-2", true ? "" : "hidden")}
+              className={cn(
+                "rounded-full w-10 h-10 p-2",
+                userSelected ? "" : "hidden"
+              )}
             >
               <TrashIcon className="w-4 h-4" />
             </Button>
@@ -167,27 +252,109 @@ const UserPage = () => {
             </AlertDialog>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4 p-4">
-          <div className="flex items-center gap-4 col-span-2">
-            <Avatar className="w-24 h-24">
-              <AvatarImage src={AvatarDefault.src} />
-              <AvatarFallback className="bg-transparent">
-                <Skeleton className="w-24 h-24 rounded-full" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="w-full overflow-hidden">
-              <p className="font-semibold tracking-tight text-2xl">
-                Thanh nhut
-              </p>
-              <p className="text-sm text-muted-foreground">ADMIN</p>
+        {!userSelected ? (
+          <div className="p-2 text-center">No selected</div>
+        ) : isEditMode ? (
+          <div className="grid grid-cols-2 gap-4 p-4 overflow-y-scroll">
+            <div className="col-span-2 flex flex-col items-center justify-center gap-4">
+              <Avatar className="w-24 h-24">
+                <AvatarImage
+                  src={
+                    userSelected?.userPreference.avatarUrl ?? AvatarDefault.src
+                  }
+                />
+                <AvatarFallback className="bg-transparent">
+                  <Skeleton className="w-24 h-24 rounded-full" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-4">
+                <Button type="button" variant="outline">
+                  Reset
+                </Button>
+                <Button type="button">Edit</Button>
+              </div>
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <Label className="leading-snug text-muted-foreground">Name</Label>
+              <Input type="text" className="focus-visible:ring-transparent" />
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <Label className="leading-snug text-muted-foreground">
+                Status
+              </Label>
+              <Input type="text" className="focus-visible:ring-transparent" />
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <Label className="leading-snug text-muted-foreground">
+                Phone
+              </Label>
+              <Input type="text" className="focus-visible:ring-transparent" />
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <Label className="leading-snug text-muted-foreground">Role</Label>
+              <Input type="text" className="focus-visible:ring-transparent" />
+            </div>
+            <div className="col-span-2 ">
+              <Label className="leading-snug text-muted-foreground">
+                Address
+              </Label>
+              <Input type="text" className="focus-visible:ring-transparent" />
+            </div>
+            <div className="col-span-2">
+              <Label className="leading-snug text-muted-foreground">Bio</Label>
+              <Textarea
+                maxLength={255}
+                className="focus-visible:ring-transparent"
+                placeholder="Tell us a little bit about yourself"
+              />
             </div>
           </div>
-          <p className="col-span-2 lg:col-span-1">email</p>
-          <p className="col-span-2 lg:col-span-1">phone</p>
-
-          <p className="col-span-2">address</p>
-          <p className="col-span-2">bio</p>
-        </div>
+        ) : (
+          <div className=" grid grid-cols-2 gap-4 p-4 overflow-y-scroll">
+            <div className="flex items-center gap-4 col-span-2">
+              <Avatar className="w-24 h-24">
+                <AvatarImage
+                  src={
+                    userSelected?.userPreference.avatarUrl ?? AvatarDefault.src
+                  }
+                />
+                <AvatarFallback className="bg-transparent">
+                  <Skeleton className="w-24 h-24 rounded-full" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="w-full overflow-hidden">
+                <p className="font-semibold tracking-tight text-2xl">
+                  {userSelected?.userPreference.username ?? "Null"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {userSelected?.role ?? "Null"}
+                </p>
+              </div>
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <p className="leading-snug text-muted-foreground">Email</p>
+              <p className="font-medium">{userSelected?.email ?? "_"}</p>
+            </div>
+            <div className="col-span-2 lg:col-span-1">
+              <p className="leading-snug text-muted-foreground">Phone</p>
+              <p className="font-medium">
+                {userSelected?.userPreference.phone ?? "_"}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <p className="leading-snug text-muted-foreground">Address</p>
+              <p className="font-medium">
+                {userSelected?.userPreference.address ?? "_"}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <p className="leading-snug text-muted-foreground">Bio</p>
+              <p className="font-medium">
+                {userSelected?.userPreference.phone ?? "_"}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
