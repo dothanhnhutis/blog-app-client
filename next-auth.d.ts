@@ -1,32 +1,13 @@
 import { DefaultSession, DefaultUser } from "next-auth";
 import { JWT, DefaultJWT } from "next-auth/jwt";
-
+import { AuthRes } from "./common.type";
 declare module "next-auth" {
   interface Session {
-    user: {
-      id: string;
-      username: string;
-      status: "ACTIVE" | "BLOCK";
-      role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-      avatarUrl: string | null | undefined;
-      token: string;
-    } & DefaultSession;
+    user: AuthRes & DefaultSession;
   }
-  interface User extends DefaultUser {
-    avatarUrl: string | null | undefined;
-    username: string;
-    status: "ACTIVE" | "BLOCK";
-    role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-    token: string;
-  }
+  interface User extends DefaultUser, Omit<AuthRes, "id"> {}
 }
 
 declare module "next-auth/jwt" {
-  interface JWT extends DefaultJWT {
-    status: "ACTIVE" | "BLOCK";
-    role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-    avatarUrl: string | null | undefined;
-    username: string;
-    token: string;
-  }
+  interface JWT extends DefaultJWT, Omit<AuthRes, "id"> {}
 }

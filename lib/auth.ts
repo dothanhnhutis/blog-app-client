@@ -4,8 +4,8 @@ import { JWT } from "next-auth/jwt";
 import { NextAuthOptions, getServerSession } from "next-auth";
 import GithubProvider, { GithubProfile } from "next-auth/providers/github";
 import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
-import { SessionInterface } from "@/common.type";
-import { SigninFormType } from "@/constants/schema";
+import { AuthRes, SessionInterface } from "@/common.type";
+import { SigninInput } from "@/constants/schema";
 import { http, httpExternal } from "./http";
 import { signJWT } from "./jwt";
 
@@ -16,43 +16,40 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
       async profile(profile: GithubProfile) {
+        const ErrorRes = {
+          ...profile,
+          id: profile.id.toString(),
+          email: profile.email,
+          username: profile.name ?? "",
+          avatarUrl: profile.avatar_url,
+          isActive: false,
+          token: "",
+          role: {
+            id: "",
+            roleName: "",
+            isLock: false,
+            permissions: [],
+          },
+        };
         try {
-          const payload = {
-            email: profile.email,
-            username: profile.name ?? profile.login,
-            avatarUrl: profile.avatar_url,
-          };
-          const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
-          const { data } = await http.post<{
-            id: string;
-            email: string;
-            username: string;
-            avatarUrl?: string | null;
-            role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-            status: "ACTIVE" | "BLOCK";
-            token: string;
-          }>("/signin/provider", { token });
-          return {
-            ...profile,
-            email: data.email,
-            role: data.role,
-            status: data.status,
-            id: data.id,
-            username: data.username,
-            avatarUrl: data.avatarUrl,
-            token: data.token,
-          };
+          if (profile.email) {
+            const payload = {
+              email: profile.email,
+              username: profile.name ?? profile.login,
+              avatarUrl: profile.avatar_url,
+            };
+            const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
+            const { data } = await http.post<AuthRes>("/signin/provider", {
+              token,
+            });
+            return {
+              ...profile,
+              ...data,
+            };
+          }
+          return ErrorRes;
         } catch (error) {
-          return {
-            ...profile,
-            email: profile.email,
-            role: "SUBSCRIBER",
-            status: "BLOCK",
-            id: profile.id.toString(),
-            username: profile.name ?? "",
-            avatarUrl: profile.avatar_url,
-            token: "",
-          };
+          return ErrorRes;
         }
       },
     }),
@@ -67,35 +64,28 @@ export const authOptions: NextAuthOptions = {
             avatarUrl: profile.picture,
           };
           const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
-          const { data } = await http.post<{
-            id: string;
-            email: string;
-            username: string;
-            avatarUrl?: string | null;
-            role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-            status: "ACTIVE" | "BLOCK";
-            token: string;
-          }>("/signin/provider", { token });
+          const { data } = await http.post<AuthRes>("/signin/provider", {
+            token,
+          });
           return {
             ...profile,
-            email: data.email,
-            role: data.role,
-            status: data.status,
-            id: data.id,
-            username: data.username,
-            avatarUrl: data.avatarUrl,
-            token: data.token,
+            ...data,
           };
         } catch (error) {
           return {
             ...profile,
-            email: profile.email,
-            role: "SUBSCRIBER",
-            status: "BLOCK",
             id: profile.sub,
+            email: profile.email,
             username: profile.name,
             avatarUrl: profile.picture,
+            isActive: false,
             token: "",
+            role: {
+              id: "",
+              roleName: "",
+              isLock: false,
+              permissions: [],
+            },
           };
         }
       },
@@ -105,25 +95,12 @@ export const authOptions: NextAuthOptions = {
       credentials: {},
       async authorize(credentials, req) {
         try {
-          const { email, password } = credentials as SigninFormType;
-          const { data } = await http.post<{
-            id: string;
-            email: string;
-            username: string;
-            avatarUrl?: string | null;
-            role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-            status: "ACTIVE" | "BLOCK";
-            token: string;
-          }>("/signin", { email, password });
-          return {
-            email: data.email,
-            role: data.role,
-            status: data.status,
-            id: data.id,
-            username: data.username,
-            avatarUrl: data.avatarUrl,
-            token: data.token,
-          };
+          const { email, password } = credentials as SigninInput;
+          const { data } = await http.post<AuthRes>("/signin", {
+            email,
+            password,
+          });
+          return data;
         } catch (error: any) {
           return null;
         }
@@ -148,7 +125,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user }) {
-      return user.status === "ACTIVE";
+      return user.isActive;
     },
     async jwt({ token, user }) {
       if (user) {

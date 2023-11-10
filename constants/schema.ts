@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-export const signinSchema = z
+export const signinInputSchema = z
   .object({
     email: z.string().email(),
     password: z.string(),
   })
   .strict();
 
-export const signupSchema = z
+export const signupInputSchema = z
   .object({
     email: z.string().email("invaid_email"),
     password: z
@@ -22,14 +22,14 @@ export const signupSchema = z
   })
   .strict();
 
-export const sendOTPSchema = z
+export const sendOTPInputSchema = z
   .object({
     email: z.string().email("invaid_email"),
     type: z.enum(["SIGNINUP", "RESETPASSWORD"] as const).optional(),
   })
   .strict();
 
-export const createTagSchema = z.object({
+export const createTagInputSchema = z.object({
   name: z
     .string({
       required_error: "name field is required",
@@ -44,7 +44,7 @@ export const createTagSchema = z.object({
     .min(1, "slug field must be at least 1 character"),
 });
 
-export type SigninFormType = z.infer<typeof signinSchema>;
-export type SignupFormType = z.infer<typeof signupSchema>;
-export type SendOTPInputType = z.infer<typeof sendOTPSchema>;
-export type CreateTagInputType = z.infer<typeof createTagSchema>;
+export type SigninInput = z.infer<typeof signinInputSchema>;
+export type SignupInput = z.infer<typeof signupInputSchema>;
+export type SendOTPInput = z.infer<typeof sendOTPInputSchema>;
+export type CreateTagInput = z.infer<typeof createTagInputSchema>;

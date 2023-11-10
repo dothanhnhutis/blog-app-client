@@ -30,55 +30,53 @@ import AvatarDefault from "@/images/user-1.jpg";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery } from "@tanstack/react-query";
 import { http } from "@/lib/http";
-
-type UserType = {
-  id: string;
-  email: string;
-  status: "ACTIVE" | "BLOCK";
-  role: "ADMIN" | "POSTER" | "SUBSCRIBER";
-  userPreference: {
-    id: string;
-    username: string;
-    bio: string;
-    phone: string;
-    avatarUrl: string;
-    address: string;
-  };
-};
-
-type UserForm = Omit<UserType, "id" | "userPreference"> &
-  Omit<UserType["userPreference"], "id">;
+import { EditUserInput, UserRes } from "@/common.type";
 
 const UserPage = () => {
   const [searchKey, setSearchKey] = React.useState<string>("");
   const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
-  const [userSelected, setUserSelected] = React.useState<
-    UserType | undefined
-  >();
+  const [userSelected, setUserSelected] = React.useState<UserRes | undefined>();
 
   const { data: users } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const { data } = await http.get<UserType[]>("/users");
+      const { data } = await http.get<UserRes[]>("/users");
       return data;
     },
   });
 
-  const [form, setForm] = React.useState({
+  const [form, setForm] = React.useState<EditUserInput>({
     email: "",
-    status: "ACTIVE",
-    role: "POSTER",
-    userPreference: {
-      username: "",
-      bio: "",
-      phone: "",
-      avatarUrl: "",
-      address: "",
-    },
+    isActive: true,
+    roleId: "",
+    username: "",
+    bio: "",
+    phone: "",
+    avatarUrl: "",
+    address: "",
   });
+
+  React.useEffect(() => {
+    if (userSelected) {
+      setForm({
+        email: userSelected.email,
+        isActive: userSelected.isActive,
+        address: userSelected.address,
+        avatarUrl: userSelected.avatarUrl,
+        bio: userSelected.bio,
+        phone: userSelected.phone,
+        roleId: userSelected.role.id,
+        username: userSelected.username,
+      });
+      setIsEditMode(false);
+    }
+  }, [userSelected]);
 
   const handleToggleEditMode = () => {
     if (!isEditMode) {
+      // setForm({
+      //   userSelected,
+      // });
       setIsEditMode(true);
     } else {
       // if (userSelected!.name === form.name && tagSelected?.slug === form.slug) {
@@ -109,9 +107,7 @@ const UserPage = () => {
           users.filter((u) =>
             searchKey.length === 0
               ? true
-              : u.userPreference.username
-                  .toLowerCase()
-                  .includes(searchKey.toLowerCase())
+              : u.username.toLowerCase().includes(searchKey.toLowerCase())
           ).length === 0 ? (
             <p className="w-full text-center text-sm p-2">No result found</p>
           ) : (
@@ -119,9 +115,7 @@ const UserPage = () => {
               .filter((u) =>
                 searchKey.length === 0
                   ? true
-                  : u.userPreference.username
-                      .toLowerCase()
-                      .includes(searchKey.toLowerCase())
+                  : u.username.toLowerCase().includes(searchKey.toLowerCase())
               )
               .map((user) => (
                 <div
@@ -146,15 +140,13 @@ const UserPage = () => {
                     )}
                   />
                   <div className="overflow-hidden mr-auto">
-                    <p className="font-medium truncate">
-                      {user.userPreference.username}
-                    </p>
+                    <p className="font-medium truncate">{user.username}</p>
                     <p className="text-xs truncate">{user.email}</p>
                   </div>
                   <LockIcon
                     className={cn(
                       "h-4 w-4 flex flex-shrink-0",
-                      user.status === "BLOCK" ? "opacity-100" : "opacity-0"
+                      !user.isActive ? "opacity-100" : "opacity-0"
                     )}
                   />
                 </div>
@@ -259,9 +251,7 @@ const UserPage = () => {
             <div className="col-span-2 flex flex-col items-center justify-center gap-4">
               <Avatar className="w-24 h-24">
                 <AvatarImage
-                  src={
-                    userSelected?.userPreference.avatarUrl ?? AvatarDefault.src
-                  }
+                  src={userSelected.avatarUrl ?? AvatarDefault.src}
                 />
                 <AvatarFallback className="bg-transparent">
                   <Skeleton className="w-24 h-24 rounded-full" />
@@ -276,19 +266,31 @@ const UserPage = () => {
             </div>
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">Name</Label>
-              <Input type="text" className="focus-visible:ring-transparent" />
+              <Input
+                value={userSelected.username ?? ""}
+                type="text"
+                className="focus-visible:ring-transparent"
+              />
             </div>
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">
-                Status
+                Active
               </Label>
-              <Input type="text" className="focus-visible:ring-transparent" />
+              <Input
+                value={userSelected.isActive ? "enable" : "disable"}
+                type="text"
+                className="focus-visible:ring-transparent"
+              />
             </div>
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">
                 Phone
               </Label>
-              <Input type="text" className="focus-visible:ring-transparent" />
+              <Input
+                value={userSelected.phone ?? ""}
+                type="text"
+                className="focus-visible:ring-transparent"
+              />
             </div>
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">Role</Label>
@@ -298,7 +300,11 @@ const UserPage = () => {
               <Label className="leading-snug text-muted-foreground">
                 Address
               </Label>
-              <Input type="text" className="focus-visible:ring-transparent" />
+              <Input
+                value={userSelected.address ?? ""}
+                type="text"
+                className="focus-visible:ring-transparent"
+              />
             </div>
             <div className="col-span-2">
               <Label className="leading-snug text-muted-foreground">Bio</Label>
@@ -306,6 +312,7 @@ const UserPage = () => {
                 maxLength={255}
                 className="focus-visible:ring-transparent"
                 placeholder="Tell us a little bit about yourself"
+                value={userSelected.bio ?? ""}
               />
             </div>
           </div>
@@ -314,9 +321,7 @@ const UserPage = () => {
             <div className="flex items-center gap-4 col-span-2">
               <Avatar className="w-24 h-24">
                 <AvatarImage
-                  src={
-                    userSelected?.userPreference.avatarUrl ?? AvatarDefault.src
-                  }
+                  src={userSelected.avatarUrl ?? AvatarDefault.src}
                 />
                 <AvatarFallback className="bg-transparent">
                   <Skeleton className="w-24 h-24 rounded-full" />
@@ -324,10 +329,10 @@ const UserPage = () => {
               </Avatar>
               <div className="w-full overflow-hidden">
                 <p className="font-semibold tracking-tight text-2xl">
-                  {userSelected?.userPreference.username ?? "Null"}
+                  {userSelected.username ?? "Null"}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {userSelected?.role ?? "Null"}
+                  {userSelected.role.roleName ?? "Null"}
                 </p>
               </div>
             </div>
@@ -337,21 +342,15 @@ const UserPage = () => {
             </div>
             <div className="col-span-2 lg:col-span-1">
               <p className="leading-snug text-muted-foreground">Phone</p>
-              <p className="font-medium">
-                {userSelected?.userPreference.phone ?? "_"}
-              </p>
+              <p className="font-medium">{userSelected.phone ?? "_"}</p>
             </div>
             <div className="col-span-2">
               <p className="leading-snug text-muted-foreground">Address</p>
-              <p className="font-medium">
-                {userSelected?.userPreference.address ?? "_"}
-              </p>
+              <p className="font-medium">{userSelected.address ?? "_"}</p>
             </div>
             <div className="col-span-2">
               <p className="leading-snug text-muted-foreground">Bio</p>
-              <p className="font-medium">
-                {userSelected?.userPreference.phone ?? "_"}
-              </p>
+              <p className="font-medium">{userSelected.phone ?? "_"}</p>
             </div>
           </div>
         )}

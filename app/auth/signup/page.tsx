@@ -22,13 +22,13 @@ import { Label } from "@/components/ui/label";
 import { AiOutlineCheck } from "react-icons/ai";
 import { cn } from "@/lib/utils";
 import useCountDown from "@/hook/useCountDown";
-import { SignupFormType, signupSchema } from "@/constants/schema";
+import { SignupInput, signupInputSchema } from "@/constants/schema";
 import { http } from "@/lib/http";
 
 const SignupPage = () => {
   const [isHiddenPassword, setIsHiddenPassword] = React.useState<boolean>(true);
   const [onfocusAt, setOnFocusAt] = useState<string | null>(null);
-  const [form, setForm] = useState<SignupFormType>({
+  const [form, setForm] = useState<SignupInput>({
     email: "",
     password: "",
     code: "",
@@ -44,7 +44,7 @@ const SignupPage = () => {
         | "length_error"
       )[]
     ): boolean => {
-      const val = signupSchema.safeParse(form);
+      const val = signupInputSchema.safeParse(form);
       if (val.success) return false;
       const errors = val.error.issues.map((i) => i.message);
       return keys.filter((val) => errors.includes(val)).length > 0;
@@ -60,7 +60,7 @@ const SignupPage = () => {
 
   const otpMutation = useMutation({
     mutationFn: async () => {
-      await http.post("/otp/send", {
+      await http.post("/otps/send", {
         email: form.email,
         type: "SIGNINUP",
       });

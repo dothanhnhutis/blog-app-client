@@ -1,4 +1,5 @@
 "use client";
+import { TagRes } from "@/common.type";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,16 +29,9 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 
-type TagType = {
-  id: string;
-  name: string;
-  slug: string;
-  _count: { post: number };
-};
-
 const TagsPage = () => {
   const queryClient = useQueryClient();
-  const [tagSelected, setTagSelected] = React.useState<TagType | undefined>();
+  const [tagSelected, setTagSelected] = React.useState<TagRes | undefined>();
   const [searchKey, setSearchKey] = useState<string>("");
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [isEditSlug, setIsEditSlug] = React.useState<boolean>(false);
@@ -45,8 +39,8 @@ const TagsPage = () => {
     React.useState<boolean>(false);
 
   const [isOpenCreateTag, setIsOpenCreateTag] = useState<boolean>(false);
-  const [form, setForm] = React.useState<Omit<TagType, "id" | "_count">>({
-    name: "",
+  const [form, setForm] = React.useState<Omit<TagRes, "id" | "_count">>({
+    tagName: "",
     slug: "",
   });
   const handleOnchange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,12 +48,12 @@ const TagsPage = () => {
   };
 
   React.useEffect(() => {
-    setForm((prev) => ({ ...prev, slug: generateSlug(form.name) }));
-  }, [form.name]);
+    setForm((prev) => ({ ...prev, slug: generateSlug(form.tagName) }));
+  }, [form.tagName]);
   const [createForm, setCreateForm] = React.useState<
-    Omit<TagType, "id" | "_count">
+    Omit<TagRes, "id" | "_count">
   >({
-    name: "",
+    tagName: "",
     slug: "",
   });
 
@@ -68,20 +62,20 @@ const TagsPage = () => {
   };
 
   React.useEffect(() => {
-    setCreateForm((prev) => ({ ...prev, slug: generateSlug(prev.name) }));
-  }, [createForm.name]);
+    setCreateForm((prev) => ({ ...prev, slug: generateSlug(prev.tagName) }));
+  }, [createForm.tagName]);
 
   const tagQuery = useQuery({
     queryKey: ["tags"],
     queryFn: async () => {
-      const { data } = await http.get<TagType[]>("/tags");
+      const { data } = await http.get<TagRes[]>("/tags");
       return data;
     },
   });
 
   React.useEffect(() => {
     if (tagSelected) {
-      setForm({ name: tagSelected.name, slug: tagSelected.slug });
+      setForm({ tagName: tagSelected.tagName, slug: tagSelected.slug });
       setIsEditMode(false);
       setIsEditSlug(false);
     }
@@ -91,7 +85,10 @@ const TagsPage = () => {
     if (!isEditMode) {
       setIsEditMode(true);
     } else {
-      if (tagSelected!.name === form.name && tagSelected?.slug === form.slug) {
+      if (
+        tagSelected!.tagName === form.tagName &&
+        tagSelected?.slug === form.slug
+      ) {
         setIsEditMode(false);
       } else {
         tagUpdateMutation.mutate({ id: tagSelected!.id, data: form });
@@ -119,15 +116,15 @@ const TagsPage = () => {
   });
 
   const tagCreateMutation = useMutation({
-    mutationFn: async (form: Omit<TagType, "id" | "_count">) => {
-      const { data } = await http.post<TagType>("/tags", createForm);
+    mutationFn: async (form: Omit<TagRes, "id" | "_count">) => {
+      const { data } = await http.post<TagRes>("/tags", createForm);
       return data;
     },
     onSettled() {
       queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
     onSuccess() {
-      setCreateForm({ name: "", slug: "" });
+      setCreateForm({ tagName: "", slug: "" });
       setIsOpenCreateTag(false);
       toast({
         description: "🥳 Create tag success",
@@ -146,7 +143,7 @@ const TagsPage = () => {
       data,
     }: {
       id: string;
-      data: Omit<TagType, "id" | "_count">;
+      data: Omit<TagRes, "id" | "_count">;
     }) => {
       await http.patch(`/tags/${id}`, data);
     },
@@ -173,7 +170,7 @@ const TagsPage = () => {
   };
 
   const handleDialogState = (isOpen: boolean) => {
-    setCreateForm({ name: "", slug: "" });
+    setCreateForm({ tagName: "", slug: "" });
     setIsOpenCreateTag(isOpen);
     setIsEditSlugCreate(false);
   };
@@ -197,7 +194,7 @@ const TagsPage = () => {
           tagQuery.data.filter((t) =>
             searchKey.length === 0
               ? true
-              : t.name.toLowerCase().includes(searchKey.toLowerCase())
+              : t.tagName.toLowerCase().includes(searchKey.toLowerCase())
           ).length === 0 ? (
             <p className="w-full text-center text-sm p-2">No result found</p>
           ) : (
@@ -205,7 +202,7 @@ const TagsPage = () => {
               ?.filter((t) =>
                 searchKey.length === 0
                   ? true
-                  : t.name.toLowerCase().includes(searchKey.toLowerCase())
+                  : t.tagName.toLowerCase().includes(searchKey.toLowerCase())
               )
               .map((t) => (
                 <div
@@ -223,7 +220,7 @@ const TagsPage = () => {
                     )}
                   />
                   <div className="overflow-hidden">
-                    <p className="font-medium truncate">{t.name}</p>
+                    <p className="font-medium truncate">{t.tagName}</p>
                     <p className="text-xs truncate">{t.slug}</p>
                   </div>
                 </div>
@@ -290,11 +287,11 @@ const TagsPage = () => {
 
                   <div className="flex flex-col space-y-4">
                     <div className="flex flex-col space-y-1.5">
-                      <Label htmlFor="name">Tag name</Label>
+                      <Label htmlFor="tagName">Tag name</Label>
                       <Input
-                        id="name"
-                        name="name"
-                        value={createForm.name}
+                        id="tagName"
+                        name="tagName"
+                        value={createForm.tagName}
                         onChange={handleOnchangeCreate}
                         className="focus-visible:ring-transparent "
                         placeholder="Tag name"
@@ -344,7 +341,7 @@ const TagsPage = () => {
                     <AlertDialogAction
                       type="submit"
                       disabled={
-                        createForm.name.length === 0 ||
+                        createForm.tagName.length === 0 ||
                         createForm.slug.length === 0 ||
                         tagQuery.data
                           ?.map((t) => t.slug)
@@ -364,12 +361,12 @@ const TagsPage = () => {
             isEditMode ? (
               <>
                 <div className="flex flex-col space-y-1.5">
-                  <Label htmlFor="name">Tag name</Label>
+                  <Label htmlFor="tagName">Tag name</Label>
                   <Input
-                    value={form.name}
+                    value={form.tagName}
                     onChange={handleOnchange}
-                    id="name"
-                    name="name"
+                    id="tagName"
+                    name="tagName"
                     className="focus-visible:ring-transparent "
                     placeholder="Tag name"
                   />
@@ -418,7 +415,9 @@ const TagsPage = () => {
                   <p className="text-sm font-medium text-muted-foreground">
                     NAME:
                   </p>
-                  <p className="text-muted-foreground">{tagSelected?.name}</p>
+                  <p className="text-muted-foreground">
+                    {tagSelected?.tagName}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">

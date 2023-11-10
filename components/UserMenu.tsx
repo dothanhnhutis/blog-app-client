@@ -39,10 +39,10 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
             <p className="font-medium text-lg">
               {session?.user?.username ?? "error"}
             </p>
-            <p className="font-light text-sm text-gray-500">
-              {`${session?.user?.role ?? "error"}`}
+            <p className="text-muted-foreground font-normal">
+              {`${session?.user.role?.roleName ?? "error"}`}
             </p>
-            <div className="flex items-center space-x-2 text-gray-500 w-full">
+            <div className="flex items-center space-x-2 text-muted-foreground w-full">
               <Mail size={16} />
               <p className="text-sm truncate">{`${
                 session?.user?.email ?? "error"

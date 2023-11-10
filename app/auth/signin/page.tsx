@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { PiEyeClosedBold, PiEyeBold } from "react-icons/pi";
-import { SigninFormType } from "@/constants/schema";
+import { SigninInput } from "@/constants/schema";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { BsGithub } from "react-icons/bs";
@@ -23,7 +23,7 @@ import { SiGoogle } from "react-icons/si";
 const SigninPage = () => {
   const router = useRouter();
   const [isHiddenPassword, setIsHiddenPassword] = React.useState<boolean>(true);
-  const [form, setForm] = useState<SigninFormType>({
+  const [form, setForm] = useState<SigninInput>({
     email: "",
     password: "",
   });
