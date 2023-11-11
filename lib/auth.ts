@@ -1,7 +1,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import jsonwebtoken from "jsonwebtoken";
 import { JWT } from "next-auth/jwt";
-import { NextAuthOptions, getServerSession } from "next-auth";
+import { NextAuthOptions, User, getServerSession } from "next-auth";
 import GithubProvider, { GithubProfile } from "next-auth/providers/github";
 import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
 import { AuthRes, SessionInterface } from "@/common.type";
@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
       async profile(profile: GithubProfile) {
-        const ErrorRes = {
+        const ErrorRes: User = {
           ...profile,
           id: profile.id.toString(),
           email: profile.email,
@@ -24,12 +24,7 @@ export const authOptions: NextAuthOptions = {
           avatarUrl: profile.avatar_url,
           isActive: false,
           token: "",
-          role: {
-            id: "",
-            roleName: "",
-            isLock: false,
-            permissions: [],
-          },
+          role: "Writer",
         };
         try {
           if (profile.email) {
@@ -80,12 +75,7 @@ export const authOptions: NextAuthOptions = {
             avatarUrl: profile.picture,
             isActive: false,
             token: "",
-            role: {
-              id: "",
-              roleName: "",
-              isLock: false,
-              permissions: [],
-            },
+            role: "Writer",
           };
         }
       },
@@ -142,7 +132,6 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
         session.user.avatarUrl = token.avatarUrl;
         session.user.token = token.token;
-        httpExternal.defaults.headers.common.Authorization = `Bearer ${token.token}`;
       }
       return session;
     },

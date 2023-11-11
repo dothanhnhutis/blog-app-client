@@ -1,5 +1,6 @@
 import { User, Session } from "next-auth";
 import { z } from "zod";
+import { Role } from "./constants/schema";
 
 export type SiderBarActionType =
   | {
@@ -77,7 +78,7 @@ export interface SessionInterface extends Session {
   user: User & {
     id: string;
     email: string;
-    role: "ADMIN" | "POSTER" | "SUBSCRIBER";
+    role: Role;
     name: string;
     avatarUrl: string;
     token: string;
@@ -85,36 +86,12 @@ export interface SessionInterface extends Session {
   };
 }
 
-export const permissionEnum = [
-  "USER_VIEW",
-  "USER_CREATE",
-  "USER_EDIT",
-  "USER_DELETE",
-  "ROLE_VIEW",
-  "ROLE_CREATE",
-  "ROLE_EDIT",
-  "ROLE_DELETE",
-  "TAG_VIEW",
-  "TAG_CREATE",
-  "TAG_EDIT",
-  "TAG_DELETE",
-  "POST_VIEW",
-  "POST_CREATE",
-  "POST_EDIT",
-  "POST_DELETE",
-] as const;
-const permissionZod = z.enum(permissionEnum);
-export type Permission = z.infer<typeof permissionZod>;
 export type AuthRes = {
   id: string;
   email: string;
   username: string;
   avatarUrl: null | string;
-  role: {
-    id: string;
-    roleName: string;
-    permissions: Permission[];
-  };
+  role: Role;
   isActive: boolean;
   token: string;
 };
@@ -131,10 +108,5 @@ export type TagRes = {
 export type UserRes = Omit<AuthRes, "token"> & {
   bio: string;
   phone: string;
-  avatarUrl: string;
   address: string;
-};
-
-export type EditUserInput = Omit<UserRes, "role" | "id"> & {
-  roleId: string;
 };

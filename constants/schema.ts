@@ -44,6 +44,71 @@ export const createTagInputSchema = z.object({
     .min(1, "slug field must be at least 1 character"),
 });
 
+export const roles = [
+  "Admin",
+  "Manager",
+  "Accountance",
+  "Researcher",
+  "Paperworker",
+  "Writer",
+] as const;
+const roleZod = z.enum(roles);
+export type Role = z.infer<typeof roleZod>;
+
+export const editUserSchema = z
+  .object({
+    email: z
+      .string({
+        required_error: "token field is required",
+        invalid_type_error: "token field must be string",
+      })
+      .email("Invalid email"),
+    password: z
+      .string({
+        required_error: "password field is required",
+        invalid_type_error: "password field must be string",
+      })
+      .min(8, "password field is too short")
+      .max(40, "password field can not be longer than 40 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]*$/,
+        "password field must include: letters, numbers and special characters"
+      ),
+    role: roleZod,
+    isActive: z.boolean({
+      required_error: "isActive field is required",
+      invalid_type_error: "isActive field must be boolean",
+    }),
+    username: z.string({
+      required_error: "username field is required",
+      invalid_type_error: "username field must be string",
+    }),
+    bio: z
+      .string({
+        required_error: "bio field is required",
+        invalid_type_error: "bio field must be string",
+      })
+      .length(255, "bio_length_error"),
+    phone: z
+      .string({
+        required_error: "phone field is required",
+        invalid_type_error: "phone field must be string",
+      })
+      .length(10, "phone_length_error"),
+    avatarUrl: z
+      .string({
+        required_error: "avatarUrl field is required",
+        invalid_type_error: "avatarUrl field must be string",
+      })
+      .nullable(),
+    address: z.string({
+      required_error: "address field is required",
+      invalid_type_error: "address field must be string",
+    }),
+  })
+  .partial();
+export type EditUserInput = z.infer<typeof editUserSchema>;
+
 export type SigninInput = z.infer<typeof signinInputSchema>;
 export type SignupInput = z.infer<typeof signupInputSchema>;
 export type SendOTPInput = z.infer<typeof sendOTPInputSchema>;

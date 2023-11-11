@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn, compareObject } from "@/lib/utils";
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -28,11 +28,21 @@ import {
 import React from "react";
 import AvatarDefault from "@/images/user-1.jpg";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/lib/http";
-import { EditUserInput, UserRes } from "@/common.type";
+import { UserRes } from "@/common.type";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { Role, editUserSchema, roles } from "@/constants/schema";
 
 const UserPage = () => {
+  const queryClient = useQueryClient();
   const [searchKey, setSearchKey] = React.useState<string>("");
   const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
   const [userSelected, setUserSelected] = React.useState<UserRes | undefined>();
@@ -45,47 +55,69 @@ const UserPage = () => {
     },
   });
 
-  const [form, setForm] = React.useState<EditUserInput>({
+  const [form, setForm] = React.useState<UserRes>({
+    id: "",
     email: "",
     isActive: true,
-    roleId: "",
+    role: "Writer",
     username: "",
     bio: "",
     phone: "",
-    avatarUrl: "",
+    avatarUrl: null,
     address: "",
   });
 
+  const handleOnchange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   React.useEffect(() => {
     if (userSelected) {
-      setForm({
-        email: userSelected.email,
-        isActive: userSelected.isActive,
-        address: userSelected.address,
-        avatarUrl: userSelected.avatarUrl,
-        bio: userSelected.bio,
-        phone: userSelected.phone,
-        roleId: userSelected.role.id,
-        username: userSelected.username,
-      });
+      setForm(userSelected);
       setIsEditMode(false);
     }
   }, [userSelected]);
 
   const handleToggleEditMode = () => {
     if (!isEditMode) {
-      // setForm({
-      //   userSelected,
-      // });
       setIsEditMode(true);
     } else {
-      // if (userSelected!.name === form.name && tagSelected?.slug === form.slug) {
-      //   setIsEditMode(false);
-      // } else {
-      //   tagUpdateMutation.mutate({ id: tagSelected!.id, data: form });
-      // }
+      const parse = editUserSchema.safeParse(form);
+
+      if (compareObject(form, userSelected!)) {
+        setIsEditMode(false);
+      } else {
+        if (parse.success) {
+          userEditMutation.mutate();
+        } else {
+          console.log(parse.error.issues);
+        }
+      }
     }
   };
+
+  const userEditMutation = useMutation({
+    mutationFn: async () => {
+      await http.patch(`/users/${userSelected?.id}`, form);
+    },
+    onSettled() {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onSuccess() {
+      toast({
+        description: "🥳 Save user success",
+      });
+      setUserSelected(form);
+      setIsEditMode(false);
+    },
+    onError() {
+      toast({
+        description: "😟 Save user fail",
+      });
+    },
+  });
 
   return (
     <div className="flex border rounded-md h-full overflow-hidden">
@@ -119,6 +151,7 @@ const UserPage = () => {
               )
               .map((user) => (
                 <div
+                  key={user.id}
                   onClick={() =>
                     setUserSelected((prev) =>
                       prev?.email === user.email ? undefined : user
@@ -173,20 +206,11 @@ const UserPage = () => {
                 userSelected ? "" : "hidden"
               )}
             >
-              {true ? (
+              {isEditMode ? (
                 <SaveIcon className="w-4 h-4" />
               ) : (
                 <PencilIcon className="w-4 h-4" />
               )}
-            </Button>
-            <Button
-              variant="ghost"
-              className={cn(
-                "rounded-full w-10 h-10 p-2",
-                userSelected ? "" : "hidden"
-              )}
-            >
-              <TrashIcon className="w-4 h-4" />
             </Button>
 
             <AlertDialog open={false}>
@@ -250,9 +274,7 @@ const UserPage = () => {
           <div className="grid grid-cols-2 gap-4 p-4 overflow-y-scroll">
             <div className="col-span-2 flex flex-col items-center justify-center gap-4">
               <Avatar className="w-24 h-24">
-                <AvatarImage
-                  src={userSelected.avatarUrl ?? AvatarDefault.src}
-                />
+                <AvatarImage src={form.avatarUrl ?? AvatarDefault.src} />
                 <AvatarFallback className="bg-transparent">
                   <Skeleton className="w-24 h-24 rounded-full" />
                 </AvatarFallback>
@@ -267,8 +289,10 @@ const UserPage = () => {
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">Name</Label>
               <Input
-                value={userSelected.username ?? ""}
+                value={form.username ?? ""}
+                onChange={handleOnchange}
                 type="text"
+                name="username"
                 className="focus-visible:ring-transparent"
               />
             </div>
@@ -276,32 +300,61 @@ const UserPage = () => {
               <Label className="leading-snug text-muted-foreground">
                 Active
               </Label>
-              <Input
-                value={userSelected.isActive ? "enable" : "disable"}
-                type="text"
-                className="focus-visible:ring-transparent"
-              />
+              <Select
+                onValueChange={(v) =>
+                  setForm((prev) => ({ ...prev, isActive: v === "true" }))
+                }
+                defaultValue={form.isActive ? "true" : "false"}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a active to display" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Enable</SelectItem>
+                  <SelectItem value="false">Disable</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">
                 Phone
               </Label>
               <Input
-                value={userSelected.phone ?? ""}
+                value={form.phone ?? ""}
+                onChange={handleOnchange}
+                name="phone"
                 type="text"
                 className="focus-visible:ring-transparent"
               />
             </div>
             <div className="col-span-2 lg:col-span-1">
               <Label className="leading-snug text-muted-foreground">Role</Label>
-              <Input type="text" className="focus-visible:ring-transparent" />
+              <Select
+                onValueChange={(v) =>
+                  setForm((prev) => ({ ...prev, role: v as Role }))
+                }
+                defaultValue={form.role}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role to display" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2 ">
               <Label className="leading-snug text-muted-foreground">
                 Address
               </Label>
               <Input
-                value={userSelected.address ?? ""}
+                value={form.address ?? ""}
+                onChange={handleOnchange}
+                name="address"
                 type="text"
                 className="focus-visible:ring-transparent"
               />
@@ -309,10 +362,12 @@ const UserPage = () => {
             <div className="col-span-2">
               <Label className="leading-snug text-muted-foreground">Bio</Label>
               <Textarea
+                onChange={handleOnchange}
+                name="bio"
                 maxLength={255}
                 className="focus-visible:ring-transparent"
                 placeholder="Tell us a little bit about yourself"
-                value={userSelected.bio ?? ""}
+                value={form.bio ?? ""}
               />
             </div>
           </div>
@@ -329,28 +384,34 @@ const UserPage = () => {
               </Avatar>
               <div className="w-full overflow-hidden">
                 <p className="font-semibold tracking-tight text-2xl">
-                  {userSelected.username ?? "Null"}
+                  {userSelected.username}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {userSelected.role.roleName ?? "Null"}
+                  {userSelected.role}
                 </p>
               </div>
             </div>
             <div className="col-span-2 lg:col-span-1">
               <p className="leading-snug text-muted-foreground">Email</p>
-              <p className="font-medium">{userSelected?.email ?? "_"}</p>
+              <p className="font-medium">{userSelected.email}</p>
             </div>
             <div className="col-span-2 lg:col-span-1">
               <p className="leading-snug text-muted-foreground">Phone</p>
-              <p className="font-medium">{userSelected.phone ?? "_"}</p>
+              <p className="font-medium">
+                {userSelected.phone.length === 0 ? "N/A" : userSelected.phone}
+              </p>
             </div>
             <div className="col-span-2">
               <p className="leading-snug text-muted-foreground">Address</p>
-              <p className="font-medium">{userSelected.address ?? "_"}</p>
+              <p className="font-medium">
+                {userSelected.address.length === 0 ? "N/A" : userSelected.phone}
+              </p>
             </div>
             <div className="col-span-2">
               <p className="leading-snug text-muted-foreground">Bio</p>
-              <p className="font-medium">{userSelected.phone ?? "_"}</p>
+              <p className="font-medium">
+                {userSelected.bio.length === 0 ? "N/A" : userSelected.phone}
+              </p>
             </div>
           </div>
         )}

@@ -40,7 +40,7 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
               {session?.user?.username ?? "error"}
             </p>
             <p className="text-muted-foreground font-normal">
-              {`${session?.user.role?.roleName ?? "error"}`}
+              {`${session?.user.role ?? "error"}`}
             </p>
             <div className="flex items-center space-x-2 text-muted-foreground w-full">
               <Mail size={16} />
@@ -51,10 +51,8 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Profile</DropdownMenuItem>
-        <DropdownMenuItem>Billing</DropdownMenuItem>
-        <DropdownMenuItem>Team</DropdownMenuItem>
-        <DropdownMenuItem>Subscription</DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => signOut()}>
           <LogOut className="mr-2 h-4 w-4" />

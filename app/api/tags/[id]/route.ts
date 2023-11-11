@@ -1,4 +1,5 @@
 import { httpExternal } from "@/lib/http";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
@@ -6,8 +7,17 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const cookieStore = cookies();
+    const session = cookieStore.get("next-auth.session-token");
+    const headers: { [index: string]: any } = {};
+    if (session) {
+      headers["x-token"] = session.value;
+    }
+
     const body = await request.json();
-    const { data } = await httpExternal.patch(`/tags/${params.id}`, body);
+    const { data } = await httpExternal.patch(`/tags/${params.id}`, body, {
+      headers,
+    });
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ ok: "something went wrong" }, { status: 500 });
@@ -38,7 +48,15 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data } = await httpExternal.delete(`/tags/${params.id}`);
+    const cookieStore = cookies();
+    const session = cookieStore.get("next-auth.session-token");
+    const headers: { [index: string]: any } = {};
+    if (session) {
+      headers["x-token"] = session.value;
+    }
+    const { data } = await httpExternal.delete(`/tags/${params.id}`, {
+      headers,
+    });
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
     return NextResponse.json({ ok: "something went wrong" }, { status: 500 });

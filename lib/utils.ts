@@ -25,3 +25,18 @@ export const comparePassword = (
 export const generateOTPCode = () => {
   return Math.floor(Math.random() * (999999 - 100000) + 100000).toString();
 };
+
+export const compareObject = (obj1: object, obj2: object): boolean => {
+  if (typeof obj1 !== "object" || typeof obj2 !== "object") {
+    return false;
+  }
+  return (
+    Object.keys(obj1).length === Object.keys(obj2).length &&
+    (Object.keys(obj1) as (keyof typeof obj1)[]).every((key) => {
+      return (
+        Object.prototype.hasOwnProperty.call(obj2, key) &&
+        obj1[key] === obj2[key]
+      );
+    })
+  );
+};

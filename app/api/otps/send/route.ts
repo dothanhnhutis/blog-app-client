@@ -1,12 +1,15 @@
 import { httpExternal } from "@/lib/http";
+import { signJWT } from "@/lib/jwt";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const token = signJWT(body, process.env.NEXTAUTH_SECRET!);
     const { data } = await httpExternal.post<{ message: string }>(
       "/otps/send",
-      body
+      { token }
     );
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
