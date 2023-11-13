@@ -59,8 +59,8 @@ export const editUserSchema = z
   .object({
     email: z
       .string({
-        required_error: "token field is required",
-        invalid_type_error: "token field must be string",
+        required_error: "email field is required",
+        invalid_type_error: "email field must be string",
       })
       .email("Invalid email"),
     password: z
@@ -88,13 +88,11 @@ export const editUserSchema = z
         required_error: "bio field is required",
         invalid_type_error: "bio field must be string",
       })
-      .length(255, "bio_length_error"),
-    phone: z
-      .string({
-        required_error: "phone field is required",
-        invalid_type_error: "phone field must be string",
-      })
-      .length(10, "phone_length_error"),
+      .max(255, "bio_length_error"),
+    phone: z.string({
+      required_error: "phone field is required",
+      invalid_type_error: "phone field must be string",
+    }),
     avatarUrl: z
       .string({
         required_error: "avatarUrl field is required",

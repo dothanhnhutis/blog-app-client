@@ -6,15 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const session = cookieStore.get("next-auth.session-token");
-    // console.log(session1?.value);
-
     const headers: { [index: string]: any } = {};
-    // const session = await getServerSession(authOptions);
-    // console.log(session);
+    const session = await getServerSession(authOptions);
     if (session) {
-      headers["x-token"] = session.value;
+      headers["x-token"] = session.user.token;
     }
     const { data } = await httpExternal.get("/users/me", {
       headers,

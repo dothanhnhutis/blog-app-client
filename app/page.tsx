@@ -34,7 +34,7 @@ export default async function Home() {
 
           <div className="flex flex-1 items-center justify-end gap-4">
             <SwitchMode />
-            <UserMenu session={session} />
+            <UserMenu />
           </div>
         </nav>
       </header>

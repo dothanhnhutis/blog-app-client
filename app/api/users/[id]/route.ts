@@ -1,6 +1,7 @@
 import { UserRes } from "@/common.type";
+import { authOptions } from "@/lib/auth";
 import { httpExternal } from "@/lib/http";
-import { cookies } from "next/headers";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
@@ -8,11 +9,10 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const session = cookieStore.get("next-auth.session-token");
     const headers: { [index: string]: any } = {};
+    const session = await getServerSession(authOptions);
     if (session) {
-      headers["x-token"] = session.value;
+      headers["x-token"] = session.user.token;
     }
 
     const body = (await request.json()) as UserRes;

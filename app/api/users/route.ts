@@ -6,10 +6,6 @@ import { authOptions } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    // console.log(session1);
-    // const cookieStore = cookies();
-    // const session = cookieStore.get("next-auth.session-token");
-    // console.log(session);
     const headers: { [index: string]: any } = {};
     const session = await getServerSession(authOptions);
     if (session) {

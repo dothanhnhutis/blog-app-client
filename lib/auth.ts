@@ -20,6 +20,10 @@ export const authOptions: NextAuthOptions = {
           ...profile,
           id: profile.id.toString(),
           token: "",
+          avatarUrl: profile.avatar_url,
+          isActive: false,
+          role: "Writer",
+          username: profile.name!,
         };
         try {
           if (profile.email) {
@@ -54,22 +58,22 @@ export const authOptions: NextAuthOptions = {
             avatarUrl: profile.picture,
           };
           const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
-          const { data } = await http.post<{ token: string }>(
-            "/signin/provider",
-            {
-              token,
-            }
-          );
+          const { data } = await http.post<AuthRes>("/signin/provider", {
+            token,
+          });
           return {
             ...profile,
             ...data,
-            id: profile.sub,
           };
         } catch (error) {
           return {
             ...profile,
             id: profile.sub,
             token: "",
+            avatarUrl: null,
+            isActive: false,
+            role: "Writer",
+            username: profile.name,
           };
         }
       },
@@ -85,8 +89,7 @@ export const authOptions: NextAuthOptions = {
             password,
           });
           return {
-            id: "null",
-            token: data.token,
+            ...data,
           };
         } catch (error: any) {
           return null;
@@ -96,7 +99,14 @@ export const authOptions: NextAuthOptions = {
   ],
   jwt: {
     encode: ({ secret, token }) => {
-      return token?.token!;
+      const encodedToken = jsonwebtoken.sign(
+        {
+          ...token,
+          exp: Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60,
+        },
+        secret
+      );
+      return encodedToken;
     },
     decode: async ({ secret, token }) => {
       const decodedToken = jsonwebtoken.verify(token!, secret);
@@ -105,21 +115,26 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user }) {
-      const { data } = await httpExternal.get<UserRes>(`/users/me`, {
-        headers: {
-          "x-token": user.token,
-        },
-      });
-      return data.isActive ?? false;
+      return user.isActive;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.token = user.token;
+        return {
+          ...token,
+          ...user,
+        };
       }
       return token;
     },
-    async session({ session, token, user }) {
-      return session;
+    async session({ session, token }) {
+      return {
+        ...session,
+        ...token,
+        user: {
+          ...session.user,
+          ...token,
+        },
+      };
     },
   },
   pages: {
@@ -130,6 +145,5 @@ export const authOptions: NextAuthOptions = {
 
 export async function getServerAuthSession() {
   const session = (await getServerSession(authOptions)) as SessionInterface;
-  console.log(session);
   return session;
 }

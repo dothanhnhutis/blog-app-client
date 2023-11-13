@@ -404,13 +404,15 @@ const UserPage = () => {
             <div className="col-span-2">
               <p className="leading-snug text-muted-foreground">Address</p>
               <p className="font-medium">
-                {userSelected.address.length === 0 ? "N/A" : userSelected.phone}
+                {userSelected.address.length === 0
+                  ? "N/A"
+                  : userSelected.address}
               </p>
             </div>
             <div className="col-span-2">
               <p className="leading-snug text-muted-foreground">Bio</p>
               <p className="font-medium">
-                {userSelected.bio.length === 0 ? "N/A" : userSelected.phone}
+                {userSelected.bio.length === 0 ? "N/A" : userSelected.bio}
               </p>
             </div>
           </div>
