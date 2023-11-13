@@ -12,14 +12,15 @@ import {
 } from "lucide-react";
 import { Label } from "./ui/label";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const SideBar = () => {
   const [open, setOpen] = useState<boolean>(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="h-full overscroll-y-auto w-full bg-popover text-popover-foreground ">
+    <div className="h-full overscroll-y-auto  bg-popover text-popover-foreground w-[200px]">
       <div className="p-1">
         <Label className="text-xs font-medium">Manager</Label>
 
@@ -36,30 +37,27 @@ const SideBar = () => {
             )}
           />
         </div>
-        <Transition
-          as="div"
-          className="bg-red-200 transition-[width] ease-out duration-1000"
-          show={open}
-          enter="  "
-          enterFrom="h-0"
-          enterTo=" h-300px"
-          leave=""
-          leaveFrom="h-300px"
-          leaveTo=" h-0"
+        <div
+          style={{ height: open ? `${ref.current?.offsetHeight}px` : `0px` }}
+          className={cn(
+            "flex flex-col transition-all ease-out duration-300 overflow-hidden"
+          )}
         >
-          <div className="flex items-center px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground">
-            <CircleIcon className="m-1.5 mr-3.5 h-2 w-2" />
-            <span className="text-base font-normal">Post</span>
+          <div ref={ref}>
+            <div className="flex items-center px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground">
+              <CircleIcon className="m-1.5 mr-3.5 h-2 w-2" />
+              <span className="text-base font-normal">Post</span>
+            </div>
+            <div className="flex items-center px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground">
+              <CircleIcon className="m-1.5 mr-3.5 h-2 w-2" />
+              <span className="text-base font-normal">Post</span>
+            </div>
+            <div className="flex items-center px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground">
+              <CircleIcon className="m-1.5 mr-3.5 h-2 w-2" />
+              <span className="text-base font-normal">Post</span>
+            </div>
           </div>
-          <div className="flex items-center px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground">
-            <CircleIcon className="m-1.5 mr-3.5 h-2 w-2" />
-            <span className="text-base font-normal">Post</span>
-          </div>
-          <div className="flex items-center px-2 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground">
-            <CircleIcon className="m-1.5 mr-3.5 h-2 w-2" />
-            <span className="text-base font-normal">Post</span>
-          </div>
-        </Transition>
+        </div>
 
         <Link
           href="/manager/posts"

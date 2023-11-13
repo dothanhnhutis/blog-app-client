@@ -176,7 +176,7 @@ const TagsPage = () => {
   };
 
   return (
-    <div className="flex border rounded-md h-full overflow-hidden">
+    <div className="flex border rounded-md overflow-hidden h-full">
       <div className="border-r w-[220px]">
         <div className="flex items-center border-b p-2">
           <SearchIcon className="w-4 h-4 opacity-50" />
@@ -206,7 +206,11 @@ const TagsPage = () => {
               )
               .map((t) => (
                 <div
-                  onClick={() => setTagSelected(t)}
+                  onClick={() =>
+                    setTagSelected((prev) =>
+                      prev?.id === t.id ? undefined : t
+                    )
+                  }
                   key={t.id}
                   className={cn(
                     "flex items-center gap-1 p-2 rounded-md",
@@ -231,13 +235,6 @@ const TagsPage = () => {
 
       <div className="flex flex-col flex-grow">
         <div className="flex items-center p-2 border-b min-h-[57px]">
-          <Button
-            onClick={() => setTagSelected(undefined)}
-            variant="ghost"
-            className={cn("h-8 w-8 p-0 mr-2", tagSelected ? "" : "hidden")}
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </Button>
           <h3 className="text-lg">Tag Detail</h3>
           <div className="flex gap-1 ml-auto">
             <Button

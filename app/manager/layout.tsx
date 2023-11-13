@@ -39,13 +39,13 @@ const ManagerLayout = async ({ children }: { children: React.ReactNode }) => {
 
           <div className="flex flex-1 items-center justify-end gap-4">
             <SwitchMode />
-            <UserMenu session={session} />
+            <UserMenu />
           </div>
         </nav>
       </header>
       <main className="relative flex ">
         <div className="sticky top-[73px] h-[calc(100vh-73px)]">
-          <ScrollArea className="flex flex-shrink-0 border-r w-[200px] h-full">
+          <ScrollArea className="flex flex-shrink-0 w-[200px] h-full">
             <SideBar />
           </ScrollArea>
         </div>

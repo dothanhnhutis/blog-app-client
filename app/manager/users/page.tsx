@@ -269,7 +269,7 @@ const UserPage = () => {
           </div>
         </div>
         {!userSelected ? (
-          <div className="p-2 text-center">No selected</div>
+          <div className="p-6 text-center">No selected</div>
         ) : isEditMode ? (
           <div className="grid grid-cols-2 gap-4 p-4 overflow-y-scroll">
             <div className="col-span-2 flex flex-col items-center justify-center gap-4">

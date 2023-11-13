@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { LogOut, Mail } from "lucide-react";
 import {
@@ -11,15 +10,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { signOut } from "next-auth/react";
 import { Skeleton } from "./ui/skeleton";
 import AvatarDefault from "@/images/user-1.jpg";
-import { SessionInterface } from "@/common.type";
+import { getServerAuthSession } from "@/lib/auth";
+import LogoutBtn from "./LogoutBtn";
 
-const UserMenu = ({ session }: { session: SessionInterface }) => {
+const UserMenu = async () => {
+  const session = await getServerAuthSession();
+  console.log(session);
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="outline-none">
+      <DropdownMenuTrigger className="outline-none ">
         <Avatar>
           <AvatarImage src={session?.user?.avatarUrl ?? AvatarDefault.src} />
           <AvatarFallback className="bg-transparent">
@@ -27,7 +28,7 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="max-w-[360px]">
+      <DropdownMenuContent align="end" className="w-[360px]">
         <DropdownMenuLabel className="flex items-center gap-3">
           <Avatar className="w-24 h-24">
             <AvatarImage src={session?.user?.avatarUrl ?? AvatarDefault.src} />
@@ -36,17 +37,11 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
             </AvatarFallback>
           </Avatar>
           <div className="w-full overflow-hidden">
-            <p className="font-medium text-lg">
-              {session?.user?.username ?? "error"}
-            </p>
-            <p className="text-muted-foreground font-normal">
-              {`${session?.user.role ?? "error"}`}
-            </p>
+            <p className="font-medium text-lg">{"error"}</p>
+            <p className="text-muted-foreground font-normal">{"error"}</p>
             <div className="flex items-center space-x-2 text-muted-foreground w-full">
               <Mail size={16} />
-              <p className="text-sm truncate">{`${
-                session?.user?.email ?? "error"
-              }`}</p>
+              <p className="text-sm truncate">{`error`}</p>
             </div>
           </div>
         </DropdownMenuLabel>
@@ -54,11 +49,8 @@ const UserMenu = ({ session }: { session: SessionInterface }) => {
         <DropdownMenuItem className="cursor-pointer">Profile</DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
+
+        <LogoutBtn />
       </DropdownMenuContent>
     </DropdownMenu>
   );

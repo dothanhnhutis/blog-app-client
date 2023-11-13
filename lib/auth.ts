@@ -4,7 +4,7 @@ import { JWT } from "next-auth/jwt";
 import { NextAuthOptions, User, getServerSession } from "next-auth";
 import GithubProvider, { GithubProfile } from "next-auth/providers/github";
 import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
-import { AuthRes, SessionInterface } from "@/common.type";
+import { AuthRes, SessionInterface, UserRes } from "@/common.type";
 import { SigninInput } from "@/constants/schema";
 import { http, httpExternal } from "./http";
 import { signJWT } from "./jwt";
@@ -19,12 +19,7 @@ export const authOptions: NextAuthOptions = {
         const ErrorRes: User = {
           ...profile,
           id: profile.id.toString(),
-          email: profile.email,
-          username: profile.name ?? "",
-          avatarUrl: profile.avatar_url,
-          isActive: false,
           token: "",
-          role: "Writer",
         };
         try {
           if (profile.email) {
@@ -59,23 +54,22 @@ export const authOptions: NextAuthOptions = {
             avatarUrl: profile.picture,
           };
           const token = signJWT(payload, process.env.NEXTAUTH_SECRET!);
-          const { data } = await http.post<AuthRes>("/signin/provider", {
-            token,
-          });
+          const { data } = await http.post<{ token: string }>(
+            "/signin/provider",
+            {
+              token,
+            }
+          );
           return {
             ...profile,
             ...data,
+            id: profile.sub,
           };
         } catch (error) {
           return {
             ...profile,
             id: profile.sub,
-            email: profile.email,
-            username: profile.name,
-            avatarUrl: profile.picture,
-            isActive: false,
             token: "",
-            role: "Writer",
           };
         }
       },
@@ -90,7 +84,10 @@ export const authOptions: NextAuthOptions = {
             email,
             password,
           });
-          return data;
+          return {
+            id: "null",
+            token: data.token,
+          };
         } catch (error: any) {
           return null;
         }
@@ -99,14 +96,7 @@ export const authOptions: NextAuthOptions = {
   ],
   jwt: {
     encode: ({ secret, token }) => {
-      const encodedToken = jsonwebtoken.sign(
-        {
-          ...token,
-          exp: Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60,
-        },
-        secret
-      );
-      return encodedToken;
+      return token?.token!;
     },
     decode: async ({ secret, token }) => {
       const decodedToken = jsonwebtoken.verify(token!, secret);
@@ -115,24 +105,20 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user }) {
-      return user.isActive;
+      const { data } = await httpExternal.get<UserRes>(`/users/me`, {
+        headers: {
+          "x-token": user.token,
+        },
+      });
+      return data.isActive ?? false;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.username = user.username;
-        token.role = user.role;
-        token.avatarUrl = user.avatarUrl;
         token.token = user.token;
       }
       return token;
     },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.username = token.username;
-        session.user.role = token.role;
-        session.user.avatarUrl = token.avatarUrl;
-        session.user.token = token.token;
-      }
+    async session({ session, token, user }) {
       return session;
     },
   },
@@ -144,5 +130,6 @@ export const authOptions: NextAuthOptions = {
 
 export async function getServerAuthSession() {
   const session = (await getServerSession(authOptions)) as SessionInterface;
+  console.log(session);
   return session;
 }
