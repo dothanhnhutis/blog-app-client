@@ -1,3 +1,4 @@
+import { ImageRes } from "@/common.type";
 import { authOptions } from "@/lib/auth";
 import { httpExternal, isAxiosError } from "@/lib/http";
 import { isBase64DataURL } from "@/lib/utils";
@@ -13,8 +14,9 @@ export async function POST(request: Request) {
       headers["x-token"] = session.user.token;
     }
     if (body.data && body.data.length > 0 && isBase64DataURL(body.data)) {
-      const { data } = await httpExternal.post(`/images`, body);
-      console.log(data);
+      const { data } = await httpExternal.post<ImageRes>(`/images`, body, {
+        headers,
+      });
       return NextResponse.json(data, { status: 200 });
     }
     return NextResponse.json({ message: "upload image fail" }, { status: 400 });

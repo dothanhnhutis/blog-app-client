@@ -110,3 +110,22 @@ export type UserRes = Omit<AuthRes, "token"> & {
   phone: string;
   address: string;
 };
+
+export type ImageRes = {
+  id: string;
+  public_id: string;
+  width: number;
+  height: number;
+  tags: string[];
+  url: string;
+  userId: string;
+  createAt: string;
+};
+
+export type UserCreateInput = {
+  email: string;
+  isActive: boolean;
+  role: Role;
+  username: string;
+  password: string;
+};

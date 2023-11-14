@@ -31,7 +31,7 @@ import AvatarDefault from "@/images/user-1.jpg";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { http } from "@/lib/http";
-import { UserRes } from "@/common.type";
+import { ImageRes, UserCreateInput, UserRes } from "@/common.type";
 import {
   Select,
   SelectContent,
@@ -41,13 +41,17 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
 import { Role, editUserSchema, roles } from "@/constants/schema";
+import { PiEyeBold, PiEyeClosedBold } from "react-icons/pi";
 
 const UserPage = () => {
   const queryClient = useQueryClient();
   const [searchKey, setSearchKey] = React.useState<string>("");
   const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
   const [userSelected, setUserSelected] = React.useState<UserRes | undefined>();
-
+  const [isOpenCreateUser, setIsOpenCreateUser] =
+    React.useState<boolean>(false);
+  const [isHiddenPassword, setIsHiddenPassword] =
+    React.useState<boolean>(false);
   const { data: users } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -67,6 +71,20 @@ const UserPage = () => {
     avatarUrl: null,
     address: "",
   });
+
+  const [formCreate, setFormCreate] = React.useState<UserCreateInput>({
+    email: "",
+    isActive: true,
+    role: "Writer",
+    username: "",
+    password: "",
+  });
+
+  const handleCreateOnchange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setFormCreate((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
   const handleOnchange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -102,24 +120,21 @@ const UserPage = () => {
 
   const userEditMutation = useMutation({
     mutationFn: async () => {
-      console.log(1);
       if (
         form.avatarUrl &&
         form.avatarUrl.length > 0 &&
         isBase64DataURL(form.avatarUrl)
       ) {
-        const { data } = await http.post(`/images`, {
+        const { data } = await http.post<ImageRes>(`/images`, {
           data: form.avatarUrl,
           tags: ["avatar"],
         });
-        console.log(data);
-        // await http.patch(`/users/${userSelected?.id}`, {
-        //   ...form,
-        //   avatarUrl: data.url,
-        // });
+        await http.patch(`/users/${userSelected?.id}`, {
+          ...form,
+          avatarUrl: data.url,
+        });
       } else {
-        console.log(1);
-        // await http.patch(`/users/${userSelected?.id}`, form);
+        await http.patch(`/users/${userSelected?.id}`, form);
       }
     },
     onSettled() {
@@ -141,26 +156,56 @@ const UserPage = () => {
 
   const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-
     const file = e.target.files?.[0];
-
     if (!file) return;
-
     if (!file.type.includes("image")) {
       alert("Please upload an image!");
-
       return;
     }
-
     const reader = new FileReader();
-
     reader.readAsDataURL(file);
-
     reader.onload = () => {
       const result = reader.result as string;
-
       setForm((prev) => ({ ...prev, avatarUrl: result }));
     };
+  };
+
+  const handleDialogState = (isOpen: boolean) => {
+    setFormCreate({
+      email: "",
+      isActive: true,
+      role: "Writer",
+      username: "",
+      password: "",
+    });
+    setIsOpenCreateUser(isOpen);
+    setIsHiddenPassword(true);
+  };
+
+  const createUserMutation = useMutation({
+    mutationFn: async () => {
+      const { data } = await http.post("/users", formCreate);
+      return data;
+    },
+    onSettled() {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onSuccess() {
+      toast({
+        description: "🥳 Create user success",
+      });
+      handleDialogState(false);
+    },
+    onError() {
+      toast({
+        description: "😟 Create user fail",
+      });
+    },
+  });
+
+  const handleSubmitCreate = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    createUserMutation.mutate();
   };
 
   return (
@@ -261,53 +306,136 @@ const UserPage = () => {
               )}
             </Button>
 
-            <AlertDialog open={false}>
-              <Button variant="ghost" className="rounded-full w-10 h-10 p-2">
+            <AlertDialog open={isOpenCreateUser}>
+              <Button
+                onClick={() => handleDialogState(true)}
+                variant="ghost"
+                className="rounded-full w-10 h-10 p-2"
+              >
                 <PlusIcon className="w-4 h-4" />
               </Button>
               <AlertDialogContent>
-                <form>
+                <form onSubmit={handleSubmitCreate}>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Create new tag</AlertDialogTitle>
+                    <AlertDialogTitle>Create new User</AlertDialogTitle>
                   </AlertDialogHeader>
 
                   <div className="flex flex-col space-y-4">
                     <div className="flex flex-col space-y-1.5">
-                      <Label htmlFor="name">Tag name</Label>
+                      <Label htmlFor="email">Email</Label>
                       <Input
-                        id="name"
-                        name="name"
-                        className="focus-visible:ring-transparent "
-                        placeholder="Tag name"
+                        onChange={handleCreateOnchange}
+                        value={formCreate.email}
+                        id="email"
+                        name="email"
+                        type="email"
+                        className={cn(
+                          "focus-visible:ring-transparent",
+                          users?.map((u) => u.email).includes(formCreate.email)
+                            ? "border-red-500"
+                            : ""
+                        )}
+                        placeholder="Email"
                       />
                     </div>
                     <div className="flex flex-col space-y-1.5">
-                      <Label htmlFor="slug">Slug</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          disabled={false}
-                          id="slug"
-                          name="slug"
-                          className={cn(
-                            "focus-visible:ring-transparent",
-                            true ? "border-red-400" : ""
-                          )}
-                          placeholder="Slug"
+                      <Label htmlFor="password">Password</Label>
+                      <div className="flex h-10 w-full rounded-md border border-input bg-background overflow-hidden text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+                        <input
+                          onChange={handleCreateOnchange}
+                          value={formCreate.password}
+                          type={isHiddenPassword ? "password" : "text"}
+                          className="flex-grow outline-none bg-transparent placeholder:text-muted-foreground px-3 py-2"
+                          id="password"
+                          placeholder="Password"
+                          name="password"
                         />
-                        <Button type="button" variant="secondary">
-                          {true ? (
-                            <UnlockIcon className="w-4 h-4" />
+                        <button
+                          className="flex flex-shrink-0 items-center px-2"
+                          type="button"
+                          tabIndex={-1}
+                          onClick={() => setIsHiddenPassword((prev) => !prev)}
+                        >
+                          {isHiddenPassword ? (
+                            <PiEyeClosedBold size={20} />
                           ) : (
-                            <LockIcon className="w-4 h-4" />
+                            <PiEyeBold size={20} />
                           )}
-                        </Button>
+                        </button>
                       </div>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="name">Full name</Label>
+                      <Input
+                        onChange={handleCreateOnchange}
+                        value={formCreate.username}
+                        id="username"
+                        name="username"
+                        className="focus-visible:ring-transparent "
+                        placeholder="Full name"
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="name">Role</Label>
+                      <Select
+                        onValueChange={(v) =>
+                          setFormCreate((prev) => ({
+                            ...prev,
+                            role: v as Role,
+                          }))
+                        }
+                        defaultValue={formCreate.role}
+                      >
+                        <SelectTrigger className="focus-visible:ring-transparent">
+                          <SelectValue placeholder="Select a role to display" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {roles.map((r) => (
+                            <SelectItem key={r} value={r}>
+                              {r}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col space-y-1.5">
+                      <Label htmlFor="name">Status</Label>
+                      <Select
+                        onValueChange={(v) =>
+                          setFormCreate((prev) => ({
+                            ...prev,
+                            isActive: v === "true",
+                          }))
+                        }
+                        defaultValue={form.isActive ? "true" : "false"}
+                      >
+                        <SelectTrigger className="focus-visible:ring-transparent">
+                          <SelectValue placeholder="Select a active to display" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Enable</SelectItem>
+                          <SelectItem value="false">Disable</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
                   <AlertDialogFooter className="mt-4">
-                    <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-                    <AlertDialogAction type="submit" disabled={false}>
+                    <AlertDialogCancel
+                      onClick={() => handleDialogState(false)}
+                      type="button"
+                    >
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      type="submit"
+                      disabled={
+                        users?.map((u) => u.email).includes(formCreate.email) ||
+                        formCreate.email.length === 0 ||
+                        formCreate.password.length === 0 ||
+                        formCreate.username.length === 0
+                      }
+                    >
                       Create
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -378,7 +506,7 @@ const UserPage = () => {
                 }
                 defaultValue={form.isActive ? "true" : "false"}
               >
-                <SelectTrigger>
+                <SelectTrigger className="focus-visible:ring-transparent">
                   <SelectValue placeholder="Select a active to display" />
                 </SelectTrigger>
                 <SelectContent>
@@ -407,7 +535,7 @@ const UserPage = () => {
                 }
                 defaultValue={form.role}
               >
-                <SelectTrigger>
+                <SelectTrigger className="focus-visible:ring-transparent">
                   <SelectValue placeholder="Select a role to display" />
                 </SelectTrigger>
                 <SelectContent>
