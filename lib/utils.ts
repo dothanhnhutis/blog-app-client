@@ -6,6 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function isBase64DataURL(value: string) {
+  const base64Regex = /^data:image\/[a-z]+;base64,/;
+  return base64Regex.test(value);
+}
+
 export const generateSlug = (name: string) => {
   return slugify(name, { lower: true, locale: "vi" });
 };

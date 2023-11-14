@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn, compareObject } from "@/lib/utils";
+import { cn, compareObject, isBase64DataURL } from "@/lib/utils";
 import {
   CheckIcon,
   ChevronLeftIcon,
+  Loader2Icon,
   LockIcon,
   PencilIcon,
   PlusIcon,
@@ -25,7 +26,7 @@ import {
   TrashIcon,
   UnlockIcon,
 } from "lucide-react";
-import React from "react";
+import React, { ChangeEvent } from "react";
 import AvatarDefault from "@/images/user-1.jpg";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -90,6 +91,7 @@ const UserPage = () => {
         setIsEditMode(false);
       } else {
         if (parse.success) {
+          console.log(1);
           userEditMutation.mutate();
         } else {
           console.log(parse.error.issues);
@@ -100,7 +102,25 @@ const UserPage = () => {
 
   const userEditMutation = useMutation({
     mutationFn: async () => {
-      await http.patch(`/users/${userSelected?.id}`, form);
+      console.log(1);
+      if (
+        form.avatarUrl &&
+        form.avatarUrl.length > 0 &&
+        isBase64DataURL(form.avatarUrl)
+      ) {
+        const { data } = await http.post(`/images`, {
+          data: form.avatarUrl,
+          tags: ["avatar"],
+        });
+        console.log(data);
+        // await http.patch(`/users/${userSelected?.id}`, {
+        //   ...form,
+        //   avatarUrl: data.url,
+        // });
+      } else {
+        console.log(1);
+        // await http.patch(`/users/${userSelected?.id}`, form);
+      }
     },
     onSettled() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -119,9 +139,33 @@ const UserPage = () => {
     },
   });
 
+  const handleChangeImage = (e: ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.includes("image")) {
+      alert("Please upload an image!");
+
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.readAsDataURL(file);
+
+    reader.onload = () => {
+      const result = reader.result as string;
+
+      setForm((prev) => ({ ...prev, avatarUrl: result }));
+    };
+  };
+
   return (
     <div className="flex border rounded-md h-full overflow-hidden">
-      <div className="border-r w-[220px]">
+      <div className="border-r w-[220px] flex flex-col">
         <div className="flex items-center border-b p-2">
           <SearchIcon className="w-4 h-4 opacity-50" />
           <Input
@@ -133,7 +177,7 @@ const UserPage = () => {
           />
         </div>
 
-        <div className=" flex flex-col gap-1 p-1 h-full overflow-y-scroll">
+        <div className=" flex flex-col gap-1 p-1 pl-2 h-full overflow-y-scroll">
           {!users ||
           users.length == 0 ||
           users.filter((u) =>
@@ -207,7 +251,11 @@ const UserPage = () => {
               )}
             >
               {isEditMode ? (
-                <SaveIcon className="w-4 h-4" />
+                userEditMutation.isPending ? (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                ) : (
+                  <SaveIcon className="w-4 h-4" />
+                )
               ) : (
                 <PencilIcon className="w-4 h-4" />
               )}
@@ -280,10 +328,34 @@ const UserPage = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="flex items-center gap-4">
-                <Button type="button" variant="outline">
+                <Button
+                  onClick={() =>
+                    setForm((prev) => ({
+                      ...prev,
+                      avatarUrl: userSelected.avatarUrl,
+                    }))
+                  }
+                  disabled={form.avatarUrl === userSelected.avatarUrl}
+                  type="button"
+                  variant="outline"
+                >
                   Reset
                 </Button>
-                <Button type="button">Edit</Button>
+
+                <Label
+                  className="dark:text-secondary text-white bg-primary py-[13px] px-4 rounded-md cursor-pointer"
+                  htmlFor="avatar"
+                >
+                  Edit
+                </Label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  name="avatar"
+                  id="avatar"
+                  onChange={handleChangeImage}
+                />
               </div>
             </div>
             <div className="col-span-2 lg:col-span-1">

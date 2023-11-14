@@ -1,6 +1,5 @@
 import { httpExternal } from "@/lib/http";
 import { signJWT } from "@/lib/jwt";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {

@@ -19,6 +19,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckIcon,
   ChevronLeftIcon,
+  Loader2Icon,
   LockIcon,
   PencilIcon,
   PlusIcon,
@@ -177,7 +178,7 @@ const TagsPage = () => {
 
   return (
     <div className="flex border rounded-md overflow-hidden h-full">
-      <div className="border-r w-[220px]">
+      <div className="border-r w-[220px] h-full flex flex-col">
         <div className="flex items-center border-b p-2">
           <SearchIcon className="w-4 h-4 opacity-50" />
           <Input
@@ -188,7 +189,7 @@ const TagsPage = () => {
             className="border-none focus-visible:ring-transparent ring-inset"
           />
         </div>
-        <div className=" flex flex-col gap-1 p-1 h-full overflow-y-scroll">
+        <div className="flex flex-col gap-1 p-1 pl-2 h-full overflow-y-scroll">
           {!tagQuery.data ||
           tagQuery.data.length === 0 ||
           tagQuery.data.filter((t) =>
@@ -250,7 +251,11 @@ const TagsPage = () => {
               )}
             >
               {isEditMode ? (
-                <SaveIcon className="w-4 h-4" />
+                tagUpdateMutation.isPending ? (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                ) : (
+                  <SaveIcon className="w-4 h-4" />
+                )
               ) : (
                 <PencilIcon className="w-4 h-4" />
               )}

@@ -58,7 +58,7 @@
   }
 
   ::-webkit-scrollbar {
-    @apply w-[5px] h-1;
+    @apply w-1 h-1;
   }
   ::-webkit-scrollbar-thumb {
     @apply bg-muted rounded-xl;
