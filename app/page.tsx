@@ -2,6 +2,7 @@ import Logo from "@/components/Logo";
 import SideBar from "@/components/SideBar";
 import { SwitchMode } from "@/components/SwitchMode";
 import UserMenu from "@/components/UserMenu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getServerAuthSession } from "@/lib/auth";
 import Link from "next/link";
 import React, { Children } from "react";
@@ -38,11 +39,14 @@ export default async function Home() {
           </div>
         </nav>
       </header>
-      <main className="relative flex ">
+
+      <main className="relative flex">
         <div className="sticky top-[73px] h-[calc(100vh-73px)] flex flex-shrink-0 border-r">
           <SideBar />
         </div>
-        <div className="max-w-7xl mx-auto">{/* {children} */}</div>
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-green-200 h-[3000px]">asdas</div>
+        </div>
       </main>
       {/* <footer className="bg-blue-500 h-[300px]">dsdads</footer> */}
     </>

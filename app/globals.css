@@ -61,8 +61,11 @@
     @apply w-1 h-1;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-muted rounded-xl;
+    @apply bg-muted-foreground rounded-xl;
   }
+  /* ::-webkit-scrollbar-track {
+    @apply dark:bg-transparent;
+  } */
 
   .tiptap.ProseMirror {
     outline: none;

@@ -4,10 +4,11 @@ import { JWT } from "next-auth/jwt";
 import { NextAuthOptions, User, getServerSession } from "next-auth";
 import GithubProvider, { GithubProfile } from "next-auth/providers/github";
 import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
-import { AuthRes, SessionInterface, UserRes } from "@/common.type";
+import { AuthRes, CurrentUser, SessionInterface, UserRes } from "@/common.type";
 import { SigninInput } from "@/constants/schema";
 import { http, httpExternal } from "./http";
 import { signJWT } from "./jwt";
+import { useQuery } from "@tanstack/react-query";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -144,6 +145,13 @@ export const authOptions: NextAuthOptions = {
 };
 
 export async function getServerAuthSession() {
+  const headers: { [index: string]: any } = {};
   const session = (await getServerSession(authOptions)) as SessionInterface;
-  return session;
+  if (session) {
+    headers["x-token"] = session.user.token;
+  }
+  const { data } = await httpExternal.get<CurrentUser>("/users/me", {
+    headers,
+  });
+  return data;
 }

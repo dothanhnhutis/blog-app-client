@@ -86,6 +86,15 @@ export interface SessionInterface extends Session {
   };
 }
 
+export type CurrentUser = {
+  id: string;
+  email: string;
+  role: Role;
+  name: string;
+  username: string;
+  avatarUrl: string;
+};
+
 export type AuthRes = {
   id: string;
   email: string;
