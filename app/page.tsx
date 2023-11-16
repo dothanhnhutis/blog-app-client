@@ -2,14 +2,10 @@ import Logo from "@/components/Logo";
 import SideBar from "@/components/SideBar";
 import { SwitchMode } from "@/components/SwitchMode";
 import UserMenu from "@/components/UserMenu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { getServerAuthSession } from "@/lib/auth";
 import Link from "next/link";
-import React, { Children } from "react";
+import React from "react";
 
 export default async function Home() {
-  const session = await getServerAuthSession();
-
   return (
     <>
       <header className="backdrop-saturate-[1.8] sticky top-0 z-50 border-b backdrop-blur bg-background/60">

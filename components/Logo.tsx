@@ -14,7 +14,7 @@ const Logo = ({ className }: { className?: string }) => {
     >
       <div className="flex items-center h-14 w-14">
         <AspectRatio ratio={1 / 1} className="flex items-center justify-center">
-          <Image priority src={LogoImage} alt="logo" className="" />
+          <Image priority src={LogoImage} alt="logo" />
         </AspectRatio>
       </div>
     </Link>

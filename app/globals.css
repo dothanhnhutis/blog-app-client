@@ -49,6 +49,10 @@
   }
 }
 
+div[contenteditable="true"] {
+  outline: none;
+}
+
 @layer base {
   * {
     @apply border-border;

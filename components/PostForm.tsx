@@ -27,6 +27,9 @@ import { generateSlug, isBase64DataURL } from "@/lib/utils";
 import { AspectRatio } from "./ui/aspect-ratio";
 import Image from "next/image";
 import { toast } from "./ui/use-toast";
+import { useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Tiptap from "./Tiptap";
 
 export type PostSubmit = {
   title: string;
@@ -38,6 +41,24 @@ export type PostSubmit = {
 };
 
 export const PostForm = ({ session }: { session: CurrentUser }) => {
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          attrs: {
+            textAlign: "left",
+          },
+        },
+      ],
+    },
+    autofocus: false,
+    editable: true,
+    injectCSS: true,
+  });
+
   const userQuery = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
@@ -56,6 +77,8 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
 
   const [isLockSlug, setIsLockSlug] = React.useState<boolean>(true);
 
+  const [searchKey, setSearchKey] = React.useState<string>("");
+
   const [formSubmitData, setFormSubmitData] = React.useState<PostSubmit>({
     title: "title 1",
     thumnail: null,
@@ -64,6 +87,14 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
     tagId: "",
     authorId: session.id,
   });
+
+  React.useEffect(() => {
+    // console.log(editor?.getJSON());
+    setFormSubmitData((prev) => ({
+      ...prev,
+      content: JSON.stringify(editor?.getJSON()!),
+    }));
+  }, [editor?.getJSON()]);
 
   React.useEffect(() => {
     setFormSubmitData((prev) => ({ ...prev, slug: generateSlug(prev.title) }));
@@ -107,6 +138,18 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
         const { data } = await http.post("/posts", formSubmitData);
         return data;
       }
+    },
+    onSuccess() {
+      editor?.commands.clearContent();
+      setFormSubmitData((prev) => ({
+        ...prev,
+        slug: "",
+        tagId: "",
+        authorId: session.id,
+        thumnail: null,
+        title: "",
+        content: JSON.stringify(editor?.getJSON()!),
+      }));
     },
   });
 
@@ -211,6 +254,7 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
               onValueChange={(v) =>
                 setFormSubmitData((prev) => ({ ...prev, tagId: v }))
               }
+              value={formSubmitData.tagId}
             >
               <SelectTrigger className="focus-visible:ring-transparent">
                 {tagQuery.isLoading ? (
@@ -251,16 +295,6 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
                 )}
               </SelectTrigger>
               <SelectContent>
-                <div className="sticky top-0 flex items-center border-b z-10">
-                  <SearchIcon className="w-4 h-4 opacity-50" />
-                  <Input
-                    // value={searchKey}
-                    // onChange={(e) => setSearchKey(e.target.value)}
-                    placeholder="Search name..."
-                    type="text"
-                    className="border-none focus-visible:ring-transparent ring-inset"
-                  />
-                </div>
                 <div className="flex flex-col gap-1 max-h-[220px] pt-1 overflow-y-scroll">
                   {userQuery.data?.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
@@ -289,9 +323,8 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
         </div>
       </div>
       <div className="flex flex-col space-y-1.5 mt-4">
-        <Label htmlFor="">Content</Label>
-        {/* <Tiptap editor={editor} /> */}
-        <div className="h-[400px]">ádsa</div>
+        <Label htmlFor="content">Content</Label>
+        <Tiptap editor={editor} />
       </div>
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline">
