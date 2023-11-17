@@ -27,9 +27,18 @@ import { generateSlug, isBase64DataURL } from "@/lib/utils";
 import { AspectRatio } from "./ui/aspect-ratio";
 import Image from "next/image";
 import { toast } from "./ui/use-toast";
-import { useEditor } from "@tiptap/react";
+import { mergeAttributes, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Tiptap from "./Tiptap";
+import Heading from "@tiptap/extension-heading";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import TextAlign from "@tiptap/extension-text-align";
+import Underline from "@tiptap/extension-underline";
+import LinkTipTap from "@tiptap/extension-link";
+import ImageTipTap from "@tiptap/extension-image";
+import TextStyleTiptap from "@tiptap/extension-text-style";
+import ColorTiptap from "@tiptap/extension-color";
 
 export type PostSubmit = {
   title: string;
@@ -40,9 +49,80 @@ export type PostSubmit = {
   authorId: string;
 };
 
+type Levels = 1 | 2 | 3 | 4;
+
+const classes: Record<Levels, string> = {
+  1: "text-4xl",
+  2: "text-3xl",
+  3: "text-2xl",
+  4: "text-1xl",
+};
+
 export const PostForm = ({ session }: { session: CurrentUser }) => {
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Heading.extend({
+        renderHTML({ node, HTMLAttributes }) {
+          const hasLevel = this.options.levels.includes(node.attrs.level);
+          const level: Levels = hasLevel
+            ? node.attrs.level
+            : this.options.levels[0];
+
+          return [
+            `h${level}`,
+            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+              class: `${classes[level]}`,
+            }),
+            0,
+          ];
+        },
+      }),
+      BulletList.extend({
+        renderHTML({ node, HTMLAttributes }) {
+          return [
+            "ul",
+            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+              class: "list-disc pl-10 my-2",
+            }),
+            0,
+          ];
+        },
+      }),
+      OrderedList.extend({
+        renderHTML({ node, HTMLAttributes }) {
+          return [
+            "ol",
+            mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+              class: "list-decimal pl-10 my-2",
+            }),
+            0,
+          ];
+        },
+      }),
+      TextAlign.configure({
+        types: ["heading", "paragraph", "image"],
+      }),
+      Underline,
+      LinkTipTap.configure({
+        protocols: ["ftp", "mailto"],
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "text-blue-400",
+        },
+        validate: (href) => /^https?:\/\//.test(href),
+      }),
+      ImageTipTap.configure({
+        HTMLAttributes: {
+          class: "w-[100px] h-[100px]",
+        },
+        allowBase64: true,
+      }),
+      TextStyleTiptap,
+      ColorTiptap.configure({
+        types: ["textStyle"],
+      }),
+    ],
     content: {
       type: "doc",
       content: [
@@ -76,8 +156,6 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
   });
 
   const [isLockSlug, setIsLockSlug] = React.useState<boolean>(true);
-
-  const [searchKey, setSearchKey] = React.useState<string>("");
 
   const [formSubmitData, setFormSubmitData] = React.useState<PostSubmit>({
     title: "title 1",
@@ -161,9 +239,9 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
 
   return (
     <form onSubmit={handleSubmitForm}>
-      <div className="grid lg:grid-cols-2 w-full gap-4">
+      <div className="grid lg:grid-cols-2 w-full gap-4 ">
         {formSubmitData.thumnail ? (
-          <AspectRatio ratio={16 / 9} className="bg-muted relative">
+          <AspectRatio ratio={16 / 9} className="bg-muted relative ">
             <Image
               src={formSubmitData.thumnail}
               alt="thumnail"
@@ -326,7 +404,7 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
         <Label htmlFor="content">Content</Label>
         <Tiptap editor={editor} />
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 mt-4">
         <Button type="button" variant="outline">
           Cancel
         </Button>

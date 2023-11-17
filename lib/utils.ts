@@ -2,6 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import bcryptjs from "bcryptjs";
 import slugify from "slugify";
+import { RGBColor } from "react-color";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -44,4 +45,28 @@ export const compareObject = (obj1: object, obj2: object): boolean => {
       );
     })
   );
+};
+
+export const convertHexToRGBA = (hexCode: string, a = 1): RGBColor => {
+  let hex = hexCode.replace("#", "");
+
+  if (hex.length === 3) {
+    hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+  }
+
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  /* Backward compatibility for whole number based opacity values. */
+  if (a > 1 && a <= 100) {
+    a = a / 100;
+  }
+
+  return {
+    r,
+    g,
+    b,
+    a,
+  };
 };
