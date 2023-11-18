@@ -47,26 +47,51 @@ export const compareObject = (obj1: object, obj2: object): boolean => {
   );
 };
 
-export const convertHexToRGBA = (hexCode: string, a = 1): RGBColor => {
+export const convertHexToRGBA = (hexCode: string): RGBColor => {
   let hex = hexCode.replace("#", "");
+  console.log(hex);
+  switch (hex.length) {
+    case 3:
+      return {
+        r: parseInt(`${hex[0]}${hex[0]}`, 16),
+        g: parseInt(`${hex[1]}${hex[1]}`, 16),
+        b: parseInt(`${hex[2]}${hex[2]}`, 16),
+        a: 1,
+      };
+    case 6:
+      return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16),
+        a: 1,
+      };
 
-  if (hex.length === 3) {
-    hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+    case 8:
+      return {
+        r: parseInt(hex.substring(0, 2), 16),
+        g: parseInt(hex.substring(2, 4), 16),
+        b: parseInt(hex.substring(4, 6), 16),
+        a: Math.round((parseInt(hex.substring(6, 8), 16) / 255) * 100) / 100,
+      };
+
+    default:
+      return {
+        r: 0,
+        g: 0,
+        b: 0,
+        a: 0,
+      };
   }
+};
+export const convertNumToHex = (n: number) => {
+  const hex = n.toString(16);
+  return hex.length == 1 ? `0${hex}` : hex;
+};
 
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
-
-  /* Backward compatibility for whole number based opacity values. */
-  if (a > 1 && a <= 100) {
-    a = a / 100;
-  }
-
-  return {
-    r,
-    g,
-    b,
-    a,
-  };
+export const convertRGBAToHex = (color: RGBColor): string => {
+  return `#${convertNumToHex(color.r)}${convertNumToHex(
+    color.g
+  )}${convertNumToHex(color.b)}${
+    color.a && color.a != 1 ? convertNumToHex(Math.round(color.a! * 255)) : ""
+  }`;
 };

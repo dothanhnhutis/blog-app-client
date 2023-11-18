@@ -1,11 +1,5 @@
 "use client";
-import {
-  ImagePlusIcon,
-  LockIcon,
-  SearchIcon,
-  UnlockIcon,
-  XIcon,
-} from "lucide-react";
+import { ImagePlusIcon, LockIcon, UnlockIcon, XIcon } from "lucide-react";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -27,10 +21,19 @@ import { generateSlug, isBase64DataURL } from "@/lib/utils";
 import { AspectRatio } from "./ui/aspect-ratio";
 import Image from "next/image";
 import { toast } from "./ui/use-toast";
-import { mergeAttributes, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import {
+  ReactNodeViewRenderer,
+  mergeAttributes,
+  useEditor,
+} from "@tiptap/react";
 import Tiptap from "./Tiptap";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
+import Text from "@tiptap/extension-text";
+import Bold from "@tiptap/extension-bold";
+import Italic from "@tiptap/extension-italic";
 import Heading from "@tiptap/extension-heading";
+import List from "@tiptap/extension-list-item";
 import BulletList from "@tiptap/extension-bullet-list";
 import OrderedList from "@tiptap/extension-ordered-list";
 import TextAlign from "@tiptap/extension-text-align";
@@ -39,6 +42,7 @@ import LinkTipTap from "@tiptap/extension-link";
 import ImageTipTap from "@tiptap/extension-image";
 import TextStyleTiptap from "@tiptap/extension-text-style";
 import ColorTiptap from "@tiptap/extension-color";
+import TipTapImageNode from "./TipTapImageNode";
 
 export type PostSubmit = {
   title: string;
@@ -61,7 +65,11 @@ const classes: Record<Levels, string> = {
 export const PostForm = ({ session }: { session: CurrentUser }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      Document,
+      Paragraph,
+      Text,
+      Bold,
+      Italic,
       Heading.extend({
         renderHTML({ node, HTMLAttributes }) {
           const hasLevel = this.options.levels.includes(node.attrs.level);
@@ -78,6 +86,7 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
           ];
         },
       }),
+      List,
       BulletList.extend({
         renderHTML({ node, HTMLAttributes }) {
           return [
@@ -101,7 +110,7 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
         },
       }),
       TextAlign.configure({
-        types: ["heading", "paragraph", "image"],
+        types: ["heading", "paragraph"],
       }),
       Underline,
       LinkTipTap.configure({
@@ -113,10 +122,12 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
         validate: (href) => /^https?:\/\//.test(href),
       }),
       ImageTipTap.configure({
-        HTMLAttributes: {
-          class: "w-[100px] h-[100px]",
-        },
         allowBase64: true,
+        inline: true,
+      }).extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(TipTapImageNode);
+        },
       }),
       TextStyleTiptap,
       ColorTiptap.configure({
@@ -166,13 +177,12 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
     authorId: session.id,
   });
 
-  React.useEffect(() => {
-    // console.log(editor?.getJSON());
-    setFormSubmitData((prev) => ({
-      ...prev,
-      content: JSON.stringify(editor?.getJSON()!),
-    }));
-  }, [editor?.getJSON()]);
+  // React.useEffect(() => {
+  //   setFormSubmitData((prev) => ({
+  //     ...prev,
+  //     content: JSON.stringify(editor?.getJSON()!),
+  //   }));
+  // }, [editor?.getJSON()]);
 
   React.useEffect(() => {
     setFormSubmitData((prev) => ({ ...prev, slug: generateSlug(prev.title) }));
@@ -233,8 +243,12 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
 
   const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(formSubmitData);
-    postMutation.mutate();
+    console.log(editor?.getJSON());
+    console.log({
+      ...formSubmitData,
+      content: JSON.stringify(editor?.getJSON()!),
+    });
+    // postMutation.mutate();
   };
 
   return (

@@ -27,7 +27,7 @@ const CreatePostModel = async () => {
 
   return k == 1 ? (
     <Modal>
-      <Card className="sm:rounded-lg md:w-full lg:max-w-screen-lg grid w-full max-w-lg">
+      <Card>
         <CardHeader>
           <CardTitle>Create project</CardTitle>
           <CardDescription>
@@ -42,11 +42,11 @@ const CreatePostModel = async () => {
   ) : (
     <Dialog defaultOpen={true}>
       <DialogContent
-        // className="overflow-y-scroll h-screen xl:max-w-7xl"
-        className="lg:max-w-screen-lg overflow-y-scroll max-h-screen"
-        // onCloseAutoFocus={() => {
-        //   router.back();
-        // }}
+      // className="overflow-y-scroll h-screen xl:max-w-7xl"
+      // className="lg:max-w-screen-lg overscroll-y-auto max-h-screen"
+      // onCloseAutoFocus={() => {
+      //   router.back();
+      // }}
       >
         <DialogHeader>
           <DialogTitle>Edit profile</DialogTitle>
