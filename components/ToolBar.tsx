@@ -504,7 +504,6 @@ const ColorAction = ({ editor }: { editor: Editor | null }) => {
     b: 0,
     a: 1,
   });
-  console.log();
   return editor ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -544,7 +543,6 @@ const ColorAction = ({ editor }: { editor: Editor | null }) => {
               ? convertHexToRGBA(editor.getAttributes("textStyle").color)
               : colorPicker
           }
-          disableAlpha={false}
           onChange={(e) => {
             setColorPicker(e.rgb);
             editor.chain().focus().setColor(convertRGBAToHex(e.rgb)).run();

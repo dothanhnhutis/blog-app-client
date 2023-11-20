@@ -49,7 +49,6 @@ export const compareObject = (obj1: object, obj2: object): boolean => {
 
 export const convertHexToRGBA = (hexCode: string): RGBColor => {
   let hex = hexCode.replace("#", "");
-  console.log(hex);
   switch (hex.length) {
     case 3:
       return {
@@ -91,7 +90,5 @@ export const convertNumToHex = (n: number) => {
 export const convertRGBAToHex = (color: RGBColor): string => {
   return `#${convertNumToHex(color.r)}${convertNumToHex(
     color.g
-  )}${convertNumToHex(color.b)}${
-    color.a && color.a != 1 ? convertNumToHex(Math.round(color.a! * 255)) : ""
-  }`;
+  )}${convertNumToHex(color.b)}${convertNumToHex(Math.round(color.a! * 255))}`;
 };

@@ -14,6 +14,17 @@ export async function POST(request: NextRequest) {
     const { data } = await httpExternal.post("/posts", body, {
       headers,
     });
+    console.log(1);
+    return NextResponse.json(data, { status: 200 });
+  } catch (error: any) {
+    console.log(error.response.data);
+    return NextResponse.json({ ok: "something went wrong" }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { data } = await httpExternal.get("/posts");
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
     console.log(error.response.data);

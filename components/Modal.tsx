@@ -26,7 +26,12 @@ const Modal = ({
       `}</style>
       <div className="absolute top-0 left-0 bottom-0 right-0 backdrop-blur-sm z-[1]" />
       <div className="absolute top-0 left-0 right-0 h-screen overflow-y-scroll z-[2]">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-h-screen overscroll-y-auto w-full max-w-lg md:w-full lg:max-w-screen-lg">
+        <div
+          className={cn(
+            "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-h-screen overscroll-y-auto w-full max-w-lg md:w-full lg:max-w-screen-lg",
+            className
+          )}
+        >
           {children}
         </div>
       </div>

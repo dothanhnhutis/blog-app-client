@@ -1,14 +1,7 @@
-// "use client";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
+"use client";
 import React from "react";
 import { useRouter } from "next/navigation";
+import { XIcon } from "lucide-react";
 import { PostForm } from "@/components/PostForm";
 import { getServerAuthSession } from "@/lib/auth";
 import Modal from "@/components/Modal";
@@ -20,14 +13,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const CreatePostModel = async () => {
-  // const router = useRouter();
-  const session = await getServerAuthSession();
-  const k: number = 1;
+const CreatePostModel = () => {
+  const router = useRouter();
 
-  return k == 1 ? (
+  return (
     <Modal>
-      <Card>
+      <Card className="relative">
+        <button
+          onClick={() => router.back()}
+          className="absolute top-4 right-4 p-1"
+        >
+          <XIcon className="w-4 h-4" />
+        </button>
         <CardHeader>
           <CardTitle>Create project</CardTitle>
           <CardDescription>
@@ -35,28 +32,19 @@ const CreatePostModel = async () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PostForm session={session} />
+          <PostForm
+            session={{
+              id: "",
+              avatarUrl: "",
+              email: "",
+              name: "",
+              role: "Admin",
+              username: "",
+            }}
+          />
         </CardContent>
       </Card>
     </Modal>
-  ) : (
-    <Dialog defaultOpen={true}>
-      <DialogContent
-      // className="overflow-y-scroll h-screen xl:max-w-7xl"
-      // className="lg:max-w-screen-lg overscroll-y-auto max-h-screen"
-      // onCloseAutoFocus={() => {
-      //   router.back();
-      // }}
-      >
-        <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
-          <DialogDescription>
-            Make changes to your profile here. Click save when you're done.
-          </DialogDescription>
-        </DialogHeader>
-        <PostForm session={session} />
-      </DialogContent>
-    </Dialog>
   );
 };
 

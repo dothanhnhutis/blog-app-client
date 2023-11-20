@@ -43,6 +43,8 @@ import ImageTipTap from "@tiptap/extension-image";
 import TextStyleTiptap from "@tiptap/extension-text-style";
 import ColorTiptap from "@tiptap/extension-color";
 import TipTapImageNode from "./TipTapImageNode";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export type PostSubmit = {
   title: string;
@@ -63,6 +65,10 @@ const classes: Record<Levels, string> = {
 };
 
 export const PostForm = ({ session }: { session: CurrentUser }) => {
+  const router = useRouter();
+  // const { data, status } = useSession();
+  // console.log(data?.user);
+
   const editor = useEditor({
     extensions: [
       Document,
@@ -169,20 +175,13 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
   const [isLockSlug, setIsLockSlug] = React.useState<boolean>(true);
 
   const [formSubmitData, setFormSubmitData] = React.useState<PostSubmit>({
-    title: "title 1",
+    title: "",
     thumnail: null,
-    slug: "title-1",
-    content: "dasdsa",
+    slug: "",
+    content: "",
     tagId: "",
     authorId: session.id,
   });
-
-  // React.useEffect(() => {
-  //   setFormSubmitData((prev) => ({
-  //     ...prev,
-  //     content: JSON.stringify(editor?.getJSON()!),
-  //   }));
-  // }, [editor?.getJSON()]);
 
   React.useEffect(() => {
     setFormSubmitData((prev) => ({ ...prev, slug: generateSlug(prev.title) }));
@@ -243,12 +242,13 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
 
   const handleSubmitForm = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(editor?.getJSON());
-    console.log({
+
+    setFormSubmitData({
       ...formSubmitData,
       content: JSON.stringify(editor?.getJSON()!),
     });
-    // postMutation.mutate();
+
+    postMutation.mutate();
   };
 
   return (
@@ -387,7 +387,7 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
                 )}
               </SelectTrigger>
               <SelectContent>
-                <div className="flex flex-col gap-1 max-h-[220px] pt-1 overflow-y-scroll">
+                <div className="max-h-[220px]">
                   {userQuery.data?.map((u) => (
                     <SelectItem key={u.id} value={u.id}>
                       <div className="flex items-center gap-2 ">
@@ -419,7 +419,7 @@ export const PostForm = ({ session }: { session: CurrentUser }) => {
         <Tiptap editor={editor} />
       </div>
       <div className="flex justify-end gap-2 mt-4">
-        <Button type="button" variant="outline">
+        <Button onClick={() => router.back()} type="button" variant="outline">
           Cancel
         </Button>
         <Button type="submit">Submit</Button>
