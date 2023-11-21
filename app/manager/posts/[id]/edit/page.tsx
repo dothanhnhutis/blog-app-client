@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/card";
 import React from "react";
 
-const EditPost = () => {
+const EditPost = ({ params }: { params: { id: string } }) => {
+  console.log(1);
   return (
     <Card>
       <CardHeader>
