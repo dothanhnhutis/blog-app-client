@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge";
 import bcryptjs from "bcryptjs";
 import slugify from "slugify";
 import { RGBColor } from "react-color";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
